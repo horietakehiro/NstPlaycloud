@@ -1,0 +1,87 @@
+version: '2.4'
+
+services:
+  # use for mocking on local development
+  localstack:
+    container_name: localstack
+    hostname: localstack
+    image: localstack/localstack
+    ports:
+      - "53:53"
+      - "443:443"
+      - "4510-4520:4510-4520"
+      - "4566-4620:4566-4620"
+      # - "${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}"
+    environment:
+      - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
+      - HOSTNAME_EXTERNAL=localstack
+      - SERVICES=s3,lambda,sqs
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      # - PORT_WEB_UI=8080
+      # - HOST_TMP_FOLDER=/private${TMPDIR}
+    volumes:
+      - "./localstack/data:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+
+  # in AWS, replaced with Aurora
+  database:
+    container_name: database
+    hostname: database
+    image: database:latest
+    build: 
+      context: ./database
+      dockerfile: Dockerfile
+    
+    environment:
+      - POSTGRES_PASSWORD=nstpc
+      - POSTGRES_USER=nstpc
+      - POSTGRES_DB=nstpc
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    
+    volumes:
+      - ./database/data:/var/lib/postgresql/data
+
+    ports:
+      - "5432:5432"
+
+  frontend:
+    image: frontend:latest
+    container_name: frontend
+    hostname: frontend
+    build:
+      context: ./frontend
+      dockerfile: ./dockerfile/Dockerfile
+
+    environment:
+      - PYTHONPATH=/app/frontend
+      - AWS_SQS_ENDPOINT_URL=http://localstack:443/
+      - AWS_S3_ENDPOINT_URL=http://localstack:443/
+
+    volumes:
+      - ./frontend/src:/app/frontend
+      - ./frontend/config:/config
+
+    ports:
+      - "8080:80"
+      - "8000:8000"
+
+    depends_on:
+      - database
+
+  browser:
+    image: browser:latest
+    container_name: browser 
+    hostname: browser
+    build:
+      context: ./browser
+      dockerfile: Dockerfile
+
+    volumes:
+      - /dev/shm:/dev/shm
+    expose: 
+      - 4444
+    ports: 
+      - "4444:4444"

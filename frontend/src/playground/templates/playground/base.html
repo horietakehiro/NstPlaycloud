@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NstPlayground</title>
+</head>
+<body>
+    <h1>NstPlayground</h1>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    
+    <form action="{% url 'upload' %}" method="POST" id="upload" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ image_form.as_p }}
+        <button type="submit" id="submit">UPLOAD</button>
+    </form>
+    <form action="{% url 'transfer' %}" method="POST" id="transfer">
+        {% csrf_token %}
+        {{ transfer_form.as_p }}
+        <button type="submit" id="transfer_submit">Transfer</button>
+    </form>
+
+    
+    {% block content %}
+    {% endblock content %}
+</body>
+</html>

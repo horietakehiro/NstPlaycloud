@@ -1,0 +1,38 @@
+{% extends 'playground/base.html' %}
+
+{% block content %}
+{% load static %}
+<h2>ImageList</h2>
+
+
+<table>
+    <th>ImageName</th>
+    <th>ImageData</th>
+    <th>Delete</th>
+    <th>Download</th>
+
+    {% for image in image_list %}
+        <tr>
+            <td class="ImageName">{{ image.basename }}</td>
+            <td class="ImageData">
+                <a href="{{ image.image.url }}">
+                    <img src="{{ image.thumbnail_url }}">
+                </a>
+            </td>
+            <td class="Delete">
+                <form action="{% url 'delete' image_id=image.id %}" method="post" id="delete">
+                    {% csrf_token %}
+                    <input type="image" src="{% static 'playground/icons/trash-box.png' %}">
+                </form>
+            </td>
+            <td class="Download">
+                <a href="{{ image.image.url }}" download>
+                    <img src="{% static 'playground/icons/download.png' %}">
+                </a>
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+
+{% endblock content %}

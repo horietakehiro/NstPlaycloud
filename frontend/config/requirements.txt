@@ -1,0 +1,6 @@
+django==3.0.5
+Pillow==7.1.1
+psycopg2-binary==2.8.5
+boto3==1.14.44
+django-storages==1.9.1
+selenium==3.141.0

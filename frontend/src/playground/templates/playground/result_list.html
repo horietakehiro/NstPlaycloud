@@ -1,0 +1,36 @@
+{% extends 'playground/base.html' %}
+
+{% block content %}
+{% load static %}
+<h2>ResultList</h2>
+
+<table>
+    <th>TransferName</th>
+    <th>ContentData</th>
+    <th>StyleData</th>
+    <th>TransferData</th>
+
+    {% for result in result_list %}
+        <tr>
+            <td class="TransferName">{{ result.transfer.basename }}</td>
+            <td class="ContentData">
+                <a href="{{ result.content.image.url }}">
+                    <img src="{{ result.content.thumbnail_url }}">
+                </a>
+            </td>
+            <td class="StyleData">
+                <a href="{{ result.style.image.url }}">
+                    <img src="{{ result.style.thumbnail_url }}">
+                </a>
+            </td>
+            <td class="TransferData">
+                <a href="{{ result.transfer.image.url }}">
+                    <img src="{{ result.transfer.thumbnail_url }}">
+                </a>
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+
+{% endblock content %}

@@ -1,0 +1,5 @@
+gcc
+iputils-ping
+wget
+curl
+unzip
