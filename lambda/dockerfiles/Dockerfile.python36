@@ -1,0 +1,13 @@
+FROM aws-sam:base
+
+
+RUN apt update \
+    && apt install -y python3.6 python3-pip \
+    && pip3 install --upgrade pip \
+    && apt clean all
+
+RUN pip install --no-cache-dir boto3
+
+WORKDIR /var/opt
+
+CMD ["/bin/bash"]

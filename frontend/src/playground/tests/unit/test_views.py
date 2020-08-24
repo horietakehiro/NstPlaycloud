@@ -282,25 +282,36 @@ class TransferTestCase(BaseTestCase):
         self.assertEqual(message_mock.add_message.call_count, 2)
 
 
-        
-
-
-
 class ResultListTestCase(BaseTestCase):
 
     def test_result_list_1(self):
         """
         result_list returns result_list.html
         """
-        resp = self.client.get("/result_list/")
+        resp = self.client.get("/result_list/0/")
         self.assertTemplateUsed(resp, "playground/result_list.html")
 
     def test_result_list_2(self):
         """
         result_list view only accept get method
         """
-        resp = self.client.post("/result_list/")
+        resp = self.client.post("/result_list/0/")
         self.assertEqual(
             resp.status_code, 405
         )
+
+
+    def test_result_list_3(self):
+        """
+        if image_id is specified, result_list view also disply result_list related to the image
+        """
+        # create transfer image
+        content = self.create_image_record(self.content)
+        style = self.create_image_record(self.style)
+        self.client.post("/transfer", data={"content" : content.id, "style" : style.id})
+
+        resp = self.client.get("/result_list/" + str(content.id) + "/")
+
+        self.assertTemplateUsed(resp, "playground/result_list.html")
+
 

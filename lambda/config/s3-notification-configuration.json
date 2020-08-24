@@ -1,0 +1,22 @@
+{"LambdaFunctionConfigurations": [
+    {
+      "Id": "thumbnail-creation-event",
+      "LambdaFunctionArn": "arn:aws:lambda:ap-northeast-1:000000000000:function:thumbnail-creation",
+      "Events": ["s3:ObjectCreated:*"],
+      "Filter": {
+        "Key": {
+          "FilterRules": [
+            {
+              "Name": "suffix",
+              "Value": ".png"
+            },
+            {
+                "Name": "prefix",
+                "Value": "media/original/"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

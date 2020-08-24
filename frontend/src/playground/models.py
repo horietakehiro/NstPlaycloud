@@ -22,7 +22,9 @@ class Image(models.Model):
         self.delete_queue_message = {
             "request_type" : "delete",
             "request_body" : {
-                "basename" : self.basename,
+                "basenames" : [
+                    self.basename,
+                ],
                 "bucket" : settings.AWS_STORAGE_BUCKET_NAME,
                 "s3_endpoint" : settings.AWS_S3_ENDPOINT_URL,
                 "prefixes" : [
@@ -32,6 +34,8 @@ class Image(models.Model):
                     MediaStorage.location + "/" + "original/binned/",
                     MediaStorage.location + "/" + "original/binned_inv/",
                     MediaStorage.location + "/" + "thumbnail/raw/",
+                    MediaStorage.location + "/" + "thumbnail/masked/",
+                    MediaStorage.location + "/" + "thumbnail/maskied_inv/",
                     MediaStorage.location + "/" + "thumbnail/binned/",
                     MediaStorage.location + "/" + "thumbnail/binned_inv/",
                 ],
@@ -58,6 +62,7 @@ class Image(models.Model):
                 QueueUrl=q_url["QueueUrl"], 
                 MessageBody=json.dumps(self.delete_queue_message),
             )
+
             return None
         
         except:

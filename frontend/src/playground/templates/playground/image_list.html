@@ -3,12 +3,14 @@
 {% block content %}
 {% load static %}
 <h2>ImageList</h2>
+<a href="{% url 'result_list' 0 %}" id="result_list_link">ResultList</a>
 
 
 <table>
     <th>ImageName</th>
     <th>ImageData</th>
     <th>Delete</th>
+    <th>RelatedResult</th>
     <th>Download</th>
 
     {% for image in image_list %}
@@ -24,6 +26,11 @@
                     {% csrf_token %}
                     <input type="image" src="{% static 'playground/icons/trash-box.png' %}">
                 </form>
+            </td>
+            <td class="RelatedResult">
+                <a href="{% url 'result_list' image.id %}" id="related_relsut_link">
+                    <img src="{% static 'playground/icons/arrows.png' %}" >
+                </a>
             </td>
             <td class="Download">
                 <a href="{{ image.image.url }}" download>

@@ -9,6 +9,6 @@ urlpatterns = [
     path("delete/<int:image_id>", views.delete, name="delete"),
     path("transfer", views.transfer, name="transfer"),
 
-    path("result_list/", views.result_list, name="result_list"),
+    path("result_list/<int:image_id>/", views.result_list, name="result_list"),
 
 ]

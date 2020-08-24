@@ -19,8 +19,8 @@ class ImageListTestCase(BaseTestCase):
 
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload images
         self.upload_image(self.content)
@@ -56,8 +56,8 @@ class ImageListTestCase(BaseTestCase):
 
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload invalid images
         self.upload_image(self.invalid)
@@ -80,8 +80,8 @@ class ImageListTestCase(BaseTestCase):
 
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload valid image
         self.upload_image(self.content)
@@ -121,8 +121,8 @@ class ImageListTestCase(BaseTestCase):
 
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload valid image
         self.upload_image(self.content)
@@ -148,8 +148,8 @@ class ImageListTestCase(BaseTestCase):
         self.setUp_driver()
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload images
         self.upload_image(self.content)
@@ -177,8 +177,8 @@ class ImageListTestCase(BaseTestCase):
         self.setUp_driver()
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload images
         self.upload_image(self.content)
@@ -216,8 +216,8 @@ class ImageListTestCase(BaseTestCase):
         self.setUp_driver()
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload images
         self.upload_image(self.content)
@@ -247,8 +247,8 @@ class ImageListTestCase(BaseTestCase):
         self.setUp_driver()
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload images
         self.upload_image(self.content)
@@ -276,8 +276,6 @@ class ImageListTestCase(BaseTestCase):
         )
 
 
-        
-
     def test_image_list_9(self):
         """
         open ImageList page, upload image, and delte it.
@@ -286,8 +284,8 @@ class ImageListTestCase(BaseTestCase):
         self.setUp_driver()
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload images
         self.upload_image(self.content)
@@ -320,45 +318,10 @@ class ImageListTestCase(BaseTestCase):
         after that, transit to Result page and display transfer results.
         """
         self.setUp_driver()
-        # open the page
-        self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
-
-        # upload content and style image
-        self.upload_image(self.content)
-        message_list = self.get_element("class_name", "messages", single=False)
-        self.assertIn(
-            messages.UPLOAD_SUCCESS.format(os.path.basename(self.content)),
-            [m.text for m in message_list],
-        )
-        self.upload_image(self.style)
-        message_list = self.get_element("class_name", "messages", single=False)
-        self.assertIn(
-            messages.UPLOAD_SUCCESS.format(os.path.basename(self.style)),
-            [m.text for m in message_list],
-        )
-
-        # select two image for transfer
-        content = self.get_element("id", "id_content")
-        style = self.get_element("id", "id_style")
-
-        Select(content).select_by_visible_text(os.path.basename(self.content))
-        Select(style).select_by_visible_text(os.path.basename(self.style))
-        submit = self.get_element("id", "transfer_submit")
-        submit.click()
-
-        message_list = self.get_element("class_name", "messages", single=False)
-        self.assertIn(
-            messages.TRANSFER_SUCCESS.format(
-                os.path.basename(self.content),
-                os.path.basename(self.style),
-            ),
-            [m.text for m in message_list],
-        )
+        self.exec_transfer(self.content, self.style)
 
         # transit to ResultList page
-        self.driver.get(self.live_server_url + "/result_list/")
+        self.driver.get(self.live_server_url + "/result_list/0/")
         image_list = self.get_element("class_name", "TransferName", single=False)
         self.assertEqual(len(image_list), 1)
 
@@ -370,7 +333,6 @@ class ImageListTestCase(BaseTestCase):
         )
 
 
-
     def test_image_list_11(self):
         """
         open ImageList page, upload two images, and transfer with get method.
@@ -378,8 +340,8 @@ class ImageListTestCase(BaseTestCase):
         self.setUp_driver()
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload content and style image
         self.upload_image(self.content)
@@ -412,8 +374,8 @@ class ImageListTestCase(BaseTestCase):
         self.setUp_driver()
         # open the page
         self.driver.get(self.live_server_url)
-        h1 = self.get_element("tag_name" ,"h1")        
-        self.assertEqual(h1.text, "NstPlayground")
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
 
         # upload content and style image
         self.upload_image(self.content)
@@ -445,9 +407,25 @@ class ImageListTestCase(BaseTestCase):
         self.aws_sqs_client.create_queue(QueueName=settings.AWS_SQS_QUEUE_NAME)
 
         message_list = self.get_element("class_name", "messages", single=False)
-        print(message_list)
         self.assertIn(
             messages.TRANSFER_WARNING.format(settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_QUEUE_NAME),
             [m.text.split("\n") for m in message_list][0],
         )
 
+    def test_image_list_13(self):
+        """
+        can transit to result_list page from image_list page
+        """
+        self.setUp_driver()
+
+        self.driver.get(self.live_server_url)
+        h2 = self.get_element("tag_name" ,"h2")
+        self.assertEqual(h2.text, "ImageList")
+        
+        link = self.get_element("id", "result_list_link")
+        link.click()
+        h2 = self.get_element("tag_name" ,"h2")
+        self.assertEqual(h2.text, "ResultList")
+
+        
+    

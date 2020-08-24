@@ -132,6 +132,7 @@ USE_TZ = True
 # settings for using s3 bucekt as static and media storage
 # DEFAULT_FILE_STORAGE="storages.backends.s3boto3.S3Boto3Storage"
 # STATICFILES_STORAGE="storages.backends.s3boto3.S3Boto3Storage"
+AWS_DEFAULT_ACL=None
 DEFAULT_FILE_STORAGE="playground.storages.MediaStorage"
 STATICFILES_STORAGE="playground.storages.StaticStorage"
 AWS_STORAGE_BUCKET_NAME=os.environ.get("AWS_STORAGE_BUCKET_NAME", "nstpc")

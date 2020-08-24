@@ -1,10 +1,13 @@
 from django.shortcuts import render, redirect, HttpResponse
 from django.contrib import messages
 from django.conf import settings
+from django.db.models import Q
 
 from playground.models import Image, Result
 from playground.forms import ImageForm, TransferForm
 from playground import messages as playground_messages
+
+
 
 # Create your views here.
 def image_list(request):
@@ -127,12 +130,17 @@ def transfer(request):
 
 
 
-
-def result_list(request):
+def result_list(request, image_id=0):
     if request.method != "GET":
         return HttpResponse(status=405)
 
-    result_list = Result.objects.all()
+    # by defailt, get all result list
+    if image_id == 0:
+        result_list = Result.objects.all()
+    else:
+        result_list = Result.objects.filter(
+            Q(content_id=image_id) | Q(style_id=image_id) | Q(transfer_id=image_id)
+        )
 
     image_form = ImageForm()
     transfer_form = TransferForm()

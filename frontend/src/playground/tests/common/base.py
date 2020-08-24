@@ -3,8 +3,6 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.files.images import ImageFile
 
 from django.conf import settings
-# settings.AWS_STORAGE_BUCKET_NAME="nstpc-test"
-# settings.AWS_SQS_QUEUE_NAME="nstpc-test"
 
 import os
 import time
@@ -12,10 +10,11 @@ import boto3
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.file_detector import LocalFileDetector
+from selenium.webdriver.support.select import Select
 options = webdriver.ChromeOptions()
 
 from playground.models import Image
-
+from playground import messages
 
 class BaseTestCase(StaticLiveServerTestCase):
     base_dir = os.path.join(os.path.dirname(__file__), "..", "test_datas")
@@ -142,3 +141,42 @@ class BaseTestCase(StaticLiveServerTestCase):
         )
         driver.file_detector = LocalFileDetector()
         return driver
+
+
+    def exec_transfer(self, content_path, style_path):
+        # open the page
+        self.driver.get(self.live_server_url)
+        h2 = self.get_element("tag_name" ,"h2")        
+        self.assertEqual(h2.text, "ImageList")
+
+        # upload content and style image
+        self.upload_image(content_path)
+        message_list = self.get_element("class_name", "messages", single=False)
+        self.assertIn(
+            messages.UPLOAD_SUCCESS.format(os.path.basename(content_path)),
+            [m.text for m in message_list],
+        )
+        self.upload_image(style_path)
+        message_list = self.get_element("class_name", "messages", single=False)
+        self.assertIn(
+            messages.UPLOAD_SUCCESS.format(os.path.basename(style_path)),
+            [m.text for m in message_list],
+        )
+
+        # select two image for transfer
+        content = self.get_element("id", "id_content")
+        style = self.get_element("id", "id_style")
+
+        Select(content).select_by_visible_text(os.path.basename(content_path))
+        Select(style).select_by_visible_text(os.path.basename(style_path))
+        submit = self.get_element("id", "transfer_submit")
+        submit.click()
+
+        message_list = self.get_element("class_name", "messages", single=False)
+        self.assertIn(
+            messages.TRANSFER_SUCCESS.format(
+                os.path.basename(content_path),
+                os.path.basename(style_path),
+            ),
+            [m.text for m in message_list],
+        )

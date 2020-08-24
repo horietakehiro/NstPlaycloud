@@ -5,7 +5,10 @@ services:
   localstack:
     container_name: localstack
     hostname: localstack
-    image: localstack/localstack
+    image: localstack
+    build:
+      context: ./localstack
+      dockerfile: Dockerfile
     ports:
       - "53:53"
       - "443:443"
@@ -13,12 +16,15 @@ services:
       - "4566-4620:4566-4620"
       # - "${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}"
     environment:
+      - LOCALSTACK_DOCKER_NAME=localstack
       - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
       - HOSTNAME_EXTERNAL=localstack
       - SERVICES=s3,lambda,sqs
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - LAMBDA_DOCKER_NETWORK=nstplaycloud_default
+      - LAMBDA_EXECUTOR=docker-reuse
       # - PORT_WEB_UI=8080
       # - HOST_TMP_FOLDER=/private${TMPDIR}
     volumes:
@@ -57,8 +63,8 @@ services:
 
     environment:
       - PYTHONPATH=/app/frontend
-      - AWS_SQS_ENDPOINT_URL=http://localstack:443/
-      - AWS_S3_ENDPOINT_URL=http://localstack:443/
+      - AWS_SQS_ENDPOINT_URL=http://localstack:4566/
+      - AWS_S3_ENDPOINT_URL=http://localstack:4566/
 
     volumes:
       - ./frontend/src:/app/frontend

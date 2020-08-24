@@ -1,3 +1,5 @@
 localstack/data
 database/data
 __pycache__
+.aws-sam
+localstack/src

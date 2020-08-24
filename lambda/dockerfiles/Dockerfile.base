@@ -1,0 +1,48 @@
+FROM ubuntu:18.04
+
+RUN apt update -y \
+    && apt install -y sudo git \
+    && apt clean all
+
+# install only docker-cli
+RUN apt-get install -y \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        gnupg-agent \
+        software-properties-common \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
+    && apt-key fingerprint 0EBFCD88 \
+    && add-apt-repository \
+        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) \
+        stable" \
+    && apt-get install -y docker-ce-cli \
+    && apt-get clean all
+
+# install homebrew to install aws-sam-cli
+RUN useradd sam -p sam -d /home/sam -m -s /bin/bash \
+    && echo "sam ALL=NOPASSWD: ALL" >> /etc/sudoers \
+    && echo -ne '\n' | su - sam -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)" 
+
+# setup brew and install aws-sam-cli
+USER sam
+RUN test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv) \
+    && echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>~/.profile \
+    && sudo apt install -y gcc \
+    && brew tap aws/tap \
+    && brew install aws-sam-cli \
+    && sudo cp `which sam` /usr/local/bin/ \
+    && rm -rf $(brew --cache) \
+    && sudo apt clean all
+
+# install aws-cli v2
+USER root
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && apt install -y unzip \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -fr ./aws*
+
+
+CMD ["/sbin/init"]
