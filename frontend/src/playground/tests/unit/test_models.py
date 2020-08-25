@@ -36,7 +36,7 @@ class ImageModelTestCase(BaseTestCase):
             image = Image.objects.create(
                 image=ImageFile(fp, name=os.path.basename(self.content)),
             )
-        res = image.send_delete_message()
+        res = image.send_delete_message({})
         self.assertIsNone(res)
 
 
@@ -52,10 +52,10 @@ class ImageModelTestCase(BaseTestCase):
                 image=ImageFile(fp, name=os.path.basename(self.content)),
             )
         
-        res = image.send_delete_message()
+        res = image.send_delete_message({})
         self.assertEqual(
             res, messages.DELETE_WARNING.format(
-                settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_QUEUE_NAME,
+                settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_DELETE_QUEUE_NAME,
             )
         )
 
@@ -108,7 +108,7 @@ class ResultModelTestCase(BaseTestCase):
             transfer_id=transfer.id, content_id=content.id, style_id=style.id,
         )
 
-        res = result.send_transfer_message()
+        res = result.send_transfer_message({})
 
         self.assertIsNone(res)
 
@@ -130,11 +130,11 @@ class ResultModelTestCase(BaseTestCase):
             transfer_id=transfer.id, content_id=content.id, style_id=style.id,
         )
 
-        res = result.send_transfer_message()
+        res = result.send_transfer_message({})
 
         self.assertEqual(
             res, messages.TRANSFER_WARNING.format(
-                settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_QUEUE_NAME,
+                settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_TRANSFER_QUEUE_NAME,
             )
         )
 

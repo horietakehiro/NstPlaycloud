@@ -269,7 +269,7 @@ class ImageListTestCase(BaseTestCase):
         self.assertEqual(len(image_list), 0)
 
         # get sqs message
-        message = self.aws_sqs_client.receive_message(QueueUrl=self.q_url)        
+        message = self.aws_sqs_client.receive_message(QueueUrl=self.delete_q_url)        
         self.assertIn(
             os.path.basename(self.content),
             message["Messages"][0]["Body"],
@@ -296,17 +296,17 @@ class ImageListTestCase(BaseTestCase):
         )
 
         # temporalily delete sqs queue
-        self.aws_sqs_client.delete_queue(QueueUrl=self.q_url)
+        self.aws_sqs_client.delete_queue(QueueUrl=self.delete_q_url)
 
         # delete image
         self.delete_image()
 
         # recreate sqs queue
-        self.aws_sqs_client.create_queue(QueueName=settings.AWS_SQS_QUEUE_NAME)
+        self.aws_sqs_client.create_queue(QueueName=settings.AWS_SQS_DELETE_QUEUE_NAME)
 
         message_list = self.get_element("class_name", "messages", single=False)
         self.assertIn(
-            messages.DELETE_WARNING.format(settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_QUEUE_NAME),
+            messages.DELETE_WARNING.format(settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_DELETE_QUEUE_NAME),
             [m.text.split("\n") for m in message_list][0],
         )
         image_list = self.get_element("class_name", "ImageName", single=False)
@@ -326,7 +326,7 @@ class ImageListTestCase(BaseTestCase):
         self.assertEqual(len(image_list), 1)
 
         # check transfer request is sent to sqs queue
-        message = self.aws_sqs_client.receive_message(QueueUrl=self.q_url)        
+        message = self.aws_sqs_client.receive_message(QueueUrl=self.transfer_q_url)        
         self.assertIn(
             "transfer",
             message["Messages"][0]["Body"],
@@ -392,7 +392,7 @@ class ImageListTestCase(BaseTestCase):
         )
 
         # temporalily delete sqs queue
-        self.aws_sqs_client.delete_queue(QueueUrl=self.q_url)
+        self.aws_sqs_client.delete_queue(QueueUrl=self.transfer_q_url)
 
         # select two image for transfer
         content = self.get_element("id", "id_content")
@@ -404,11 +404,11 @@ class ImageListTestCase(BaseTestCase):
         submit.click()
 
         # recreate sqs queue
-        self.aws_sqs_client.create_queue(QueueName=settings.AWS_SQS_QUEUE_NAME)
+        self.aws_sqs_client.create_queue(QueueName=settings.AWS_SQS_TRANSFER_QUEUE_NAME)
 
         message_list = self.get_element("class_name", "messages", single=False)
         self.assertIn(
-            messages.TRANSFER_WARNING.format(settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_QUEUE_NAME),
+            messages.TRANSFER_WARNING.format(settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_TRANSFER_QUEUE_NAME),
             [m.text.split("\n") for m in message_list][0],
         )
 

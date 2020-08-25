@@ -19,28 +19,6 @@ class Image(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.delete_queue_message = {
-            "request_type" : "delete",
-            "request_body" : {
-                "basenames" : [
-                    self.basename,
-                ],
-                "bucket" : settings.AWS_STORAGE_BUCKET_NAME,
-                "s3_endpoint" : settings.AWS_S3_ENDPOINT_URL,
-                "prefixes" : [
-                    MediaStorage.location + "/" + "original/raw/",
-                    MediaStorage.location + "/" + "original/masked/",
-                    MediaStorage.location + "/" + "original/maskied_inv/",
-                    MediaStorage.location + "/" + "original/binned/",
-                    MediaStorage.location + "/" + "original/binned_inv/",
-                    MediaStorage.location + "/" + "thumbnail/raw/",
-                    MediaStorage.location + "/" + "thumbnail/masked/",
-                    MediaStorage.location + "/" + "thumbnail/maskied_inv/",
-                    MediaStorage.location + "/" + "thumbnail/binned/",
-                    MediaStorage.location + "/" + "thumbnail/binned_inv/",
-                ],
-            }
-        }
 
     @property
     def basename(self):
@@ -51,23 +29,24 @@ class Image(models.Model):
         return self.image.url.replace("/original/", "/thumbnail/")
 
 
-    def send_delete_message(self):
+    @classmethod
+    def send_delete_message(cls, message):
         """
         send sqs queue a request message to delete imgage files on s3
         """
         try:
-            q_url = self.sqs_client.get_queue_url(QueueName=settings.AWS_SQS_QUEUE_NAME)
+            q_url = cls.sqs_client.get_queue_url(QueueName=settings.AWS_SQS_DELETE_QUEUE_NAME)
 
-            res = self.sqs_client.send_message(
+            res = cls.sqs_client.send_message(
                 QueueUrl=q_url["QueueUrl"], 
-                MessageBody=json.dumps(self.delete_queue_message),
+                MessageBody=json.dumps(message),
             )
 
             return None
         
         except:
             return messages.DELETE_WARNING.format(
-                settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_QUEUE_NAME,
+                settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_DELETE_QUEUE_NAME,
             )
 
     @classmethod
@@ -121,32 +100,22 @@ class Result(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.transfer_queue_message = {
-            "request_type" : "transfer",
-            "request_body" : {
-                "transfer" : self.transfer.basename,
-                "content" : self.content.basename,
-                "style" : self.style.basename,
-                "bucket" : settings.AWS_STORAGE_BUCKET_NAME,
-                "s3_endpoint" : settings.AWS_S3_ENDPOINT_URL,
-            }
-        }
 
-
-    def send_transfer_message(self):
+    @classmethod
+    def send_transfer_message(cls, message):
         """
         send sqs queue a request message to transfer using images at s3
         """
 
         try:
-            q_url = self.sqs_client.get_queue_url(QueueName=settings.AWS_SQS_QUEUE_NAME)
+            q_url = cls.sqs_client.get_queue_url(QueueName=settings.AWS_SQS_TRANSFER_QUEUE_NAME)
 
-            res = self.sqs_client.send_message(
+            res = cls.sqs_client.send_message(
                 QueueUrl=q_url["QueueUrl"], 
-                MessageBody=json.dumps(self.transfer_queue_message),
+                MessageBody=json.dumps(message),
             )
             return None
         except:
             return messages.TRANSFER_WARNING.format(
-                settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_QUEUE_NAME,
+                settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_TRANSFER_QUEUE_NAME,
             )

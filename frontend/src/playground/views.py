@@ -71,7 +71,9 @@ def delete(request, image_id):
         return redirect("image_list")
 
     # send sqs queue a request message for deleting image files in s3
-    msg = image.send_delete_message()
+    delete_message = playground_messages.DELETE_QUEUE_MESSAGE
+    delete_message["request_body"]["basenames"] = [image.basename]
+    msg = image.send_delete_message(delete_message)
     if msg is not None:
         messages.add_message(
             request,
@@ -121,8 +123,12 @@ def transfer(request):
         content_id=form.cleaned_data["content"],
         style_id=form.cleaned_data["style"],
     )
+    transfer_message = playground_messages.TRANSFER_QUEUE_MESSAGE
+    transfer_message["request_body"]["content_list"] = [result.content.basename]
+    transfer_message["request_body"]["style_list"] = [result.style.basename]
+    transfer_message["request_body"]["transfer_list"] = [result.transfer.basename]
 
-    msg = result.send_transfer_message()
+    msg = result.send_transfer_message(transfer_message)
     if msg is not None:
         messages.add_message(request, messages.WARNING, msg)
 

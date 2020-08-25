@@ -28,7 +28,8 @@ class BaseTestCase(StaticLiveServerTestCase):
     aws_s3_client = None
     aws_s3_resource = None
     aws_sqs_client = None
-    q_url = None
+    delete_q_url = None
+    transfer_q_url = None
 
     @classmethod
     def setUpClass(cls):
@@ -39,8 +40,12 @@ class BaseTestCase(StaticLiveServerTestCase):
 
         # create queue for test
         cls.aws_sqs_client = boto3.client("sqs", endpoint_url=settings.AWS_SQS_ENDPOINT_URL)
-        res = cls.aws_sqs_client.create_queue(QueueName=settings.AWS_SQS_QUEUE_NAME)
-        cls.q_url = res["QueueUrl"]
+        res = cls.aws_sqs_client.create_queue(QueueName=settings.AWS_SQS_DELETE_QUEUE_NAME)
+        cls.delete_q_url = res["QueueUrl"]
+
+        res = cls.aws_sqs_client.create_queue(QueueName=settings.AWS_SQS_TRANSFER_QUEUE_NAME)
+        cls.transfer_q_url = res["QueueUrl"]
+
 
         return super().setUpClass()
 
@@ -70,7 +75,8 @@ class BaseTestCase(StaticLiveServerTestCase):
         cls.aws_s3_client.delete_bucket(Bucket=settings.AWS_STORAGE_BUCKET_NAME)
 
         # delete queue
-        cls.aws_sqs_client.delete_queue(QueueUrl=cls.q_url)
+        cls.aws_sqs_client.delete_queue(QueueUrl=cls.delete_q_url)
+        cls.aws_sqs_client.delete_queue(QueueUrl=cls.transfer_q_url)
 
 
         return super().tearDownClass()

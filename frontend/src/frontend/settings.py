@@ -142,4 +142,5 @@ STATIC_URL=AWS_S3_ENDPOINT_URL
 
 # settings for using sqs
 AWS_SQS_ENDPOINT_URL=os.environ.get("AWS_SQS_ENDPOINT_URL", None)
-AWS_SQS_QUEUE_NAME=os.environ.get("AWS_SQS_QUEUE_NAME", "nstpc")
+AWS_SQS_DELETE_QUEUE_NAME=os.environ.get("AWS_SQS_DELETE_QUEUE_NAME", "nstpc-delete")
+AWS_SQS_TRANSFER_QUEUE_NAME=os.environ.get("AWS_SQS_TRANSFER_QUEUE_NAME", "nstpc-transfer")
