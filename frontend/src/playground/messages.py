@@ -51,6 +51,7 @@ TRANSFER_QUEUE_MESSAGE = {
         "content_list" : None,
         "style_list" : None,
 
+        "key_prefix" : MediaStorage.location + "/original/raw/",
         "bucket" : settings.AWS_STORAGE_BUCKET_NAME,
         "s3_endpoint" : settings.AWS_S3_ENDPOINT_URL,
     }

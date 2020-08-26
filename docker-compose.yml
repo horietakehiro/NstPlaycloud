@@ -77,6 +77,25 @@ services:
     depends_on:
       - database
 
+  backend:
+    image: backend:gpu
+    runtime: nvidia
+    container_name: backend
+    hostname: backend
+    build:
+      context: ./backend
+      dockerfile: ./dockerfile/Dockerfile
+    
+    environment:
+      - PYTHONPATH=/app/backend
+      - MAX_IMAGE_SIZE=512
+      - AWS_SQS_ENDPOINT_URL=http://localstack:4566/
+      - AWS_S3_ENDPOINT_URL=http://localstack:4566/
+    volumes:
+      - ./backend/src:/app/backend
+      - ./backend/config:/config
+
+
   browser:
     image: browser:latest
     container_name: browser 
