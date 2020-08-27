@@ -5,9 +5,9 @@ import tensorflow as tf
 class NstEngine(tf.Module):
 
     def __init__(self, height, width, config):
-        self.epoch = int(config['epoch'])
-        self.content_layers = eval(config['content_layers'])
-        self.style_layers = eval(config['style_layers'])
+        self.epoch = int(config.EPOCH)
+        self.content_layers = list(config.CONTENT_LAYERS)
+        self.style_layers = list(config.STYLE_LAYERS)
 
         self.content_image = tf.Variable(
             tf.zeros((1,height, width ,3)), 
@@ -23,18 +23,18 @@ class NstEngine(tf.Module):
         self.content_target = None
         self.style_target = None
 
-        self.learning_rate = eval(config['learning_rate'])
-        self.beta_1 = eval(config['beta_1'])
-        self.epsilon = eval(config['epsilon'])
+        self.learning_rate = float(config.LEARNIGN_RATE)
+        self.beta_1 = float(config.BETA_1)
+        self.epsilon = float(config.EPSILON)
         self.optimizer = tf.keras.optimizers.Adam(
             learning_rate=self.learning_rate,
             beta_1=self.beta_1,
             epsilon=self.epsilon,
         )
 
-        self.content_weights = eval(config['content_weights'])
-        self.style_weights = eval(config['style_weights'])
-        self.total_variation_weights = eval(config['total_variation_weights'])
+        self.content_weights = float(config.CONTENT_WEIGHTS)
+        self.style_weights = float(config.STYLE_WEIGHTS)
+        self.total_variation_weights = float(config.TOTAL_VARIATION_WEIGHTS)
 
         self.loss = tf.Variable(tf.zeros((1)), dtype=tf.float32)
 

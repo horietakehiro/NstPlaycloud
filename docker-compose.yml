@@ -79,7 +79,7 @@ services:
 
   backend:
     image: backend:gpu
-    runtime: nvidia
+    # runtime: nvidia
     container_name: backend
     hostname: backend
     build:

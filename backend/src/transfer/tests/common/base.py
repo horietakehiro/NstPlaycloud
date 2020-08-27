@@ -5,6 +5,7 @@ import glob
 import json
 import boto3
 import shutil
+from PIL import Image
 
 from transfer.common import config
 
@@ -12,7 +13,7 @@ class BaseTestCase(unittest.TestCase):
 
     base_dir = os.path.join(os.path.dirname(__file__), "..", "test_datas")
     test_config = config
-    test_config.IMAGE_DIR = test_config.IMAGE_DIR.replace("/images", "images4test")
+    test_config.IMAGE_DIR = test_config.IMAGE_DIR.replace("/images", "/images4test")
 
 
     transfer = os.path.join(base_dir, "transfer.png")
@@ -127,5 +128,20 @@ class BaseTestCase(unittest.TestCase):
             QueueUrl=self.transfer_q_url,
             MessageBody=json.dumps(message),
         )
+
+
+    def calc_limited_shape(self, image_path):
+        """
+        return (height, width)
+        """
+        image = Image.open(image_path)
+        image = image.convert("RGB")
+        size = (image.height, image.width)
+        long_dim = max(image.size)
+
+        scale = self.test_config.MAX_IMAGE_SIZE / long_dim
+        new_size = (round(s * scale) for s in size)
+
+        return new_size
 
 
