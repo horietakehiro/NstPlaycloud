@@ -36,15 +36,15 @@ class NstEngine(tf.Module):
         self.style_weights = float(config.STYLE_WEIGHTS)
         self.total_variation_weights = float(config.TOTAL_VARIATION_WEIGHTS)
 
-        self.loss = tf.Variable(tf.zeros((1)), dtype=tf.float32)
+        # self.loss = tf.Variable(tf.zeros((1)), dtype=tf.float32)
 
-    @tf.function(
-        input_signature=(
-            tf.TensorSpec(shape=[None, None, None, None], dtype=tf.float32),
-            tf.TensorSpec(shape=[None, None, None, None], dtype=tf.float32),
-            tf.TensorSpec(shape=[None, None, None, None], dtype=tf.float32),
-        )
-    )
+    # @tf.function(
+    #     input_signature=(
+    #         tf.TensorSpec(shape=[None, None, None, None], dtype=tf.float32),
+    #         tf.TensorSpec(shape=[None, None, None, None], dtype=tf.float32),
+    #         tf.TensorSpec(shape=[None, None, None, None], dtype=tf.float32),
+    #     )
+    # )
     def fit(self, content, style, content_org):
 
         self.content_image_org = content_org
@@ -57,8 +57,8 @@ class NstEngine(tf.Module):
 
         for e in range(self.epoch):
             loss = self.step()
-        self.loss.assign([loss])
-        return self.content_image, self.loss
+        # self.loss.assign([loss])
+        return self.content_image.numpy()  # self.loss
     
     @tf.function
     def step(self):

@@ -6,7 +6,7 @@ import pathlib
 import numpy as np
 
 from transfer.client import transfer_client
-from transfer.common import config
+from transfer.common import config, messages
 
 @patch("transfer.client.transfer_client.put_image_to_s3")
 @patch("transfer.client.transfer_client.postprocess_image")
@@ -41,6 +41,121 @@ class MainTestCase(BaseTestCase):
                 s3_put_mock.call_count,
             ],
             [1, 1, 2, 1, 1, 1]
+        )
+
+    def test_main_2(self, sqs_mock, s3_get_mock, pre_image_mock, engine_mock, post_image_mock, s3_put_mock):
+        """
+        test_main_2 : if main function fails to receive message from sqs queue,
+        return error message. 
+        """
+        sqs_mock.return_value = ""
+        s3_get_mock.return_value = "", "", ""
+        pre_image_mock.return_value = None, None, None
+        engine_mock.return_value = Mock(shape=[1, 512, 512, 3])
+        post_image_mock.return_value = "/mock/mock.mock"
+        s3_put_mock.return_value = None
+
+
+        res = transfer_client.main()
+
+        self.assertListEqual(
+            [
+                sqs_mock.call_count, 
+                s3_get_mock.call_count, 
+                pre_image_mock.call_count, 
+                engine_mock.call_count,
+                post_image_mock.call_count,
+                s3_put_mock.call_count,
+            ],
+            [1, 0, 0, 0, 0, 0]
+        )
+
+
+    def test_main_3(self, sqs_mock, s3_get_mock, pre_image_mock, engine_mock, post_image_mock, s3_put_mock):
+        """
+        test_main_3 : if main function receive no message,
+        return error message. 
+        """
+        sqs_mock.return_value = ""
+        s3_get_mock.return_value = "", "", ""
+        pre_image_mock.return_value = None, None, None
+        engine_mock.return_value = Mock(shape=[1, 512, 512, 3])
+        post_image_mock.return_value = "/mock/mock.mock"
+        s3_put_mock.return_value = None
+
+
+        res = transfer_client.main()
+
+        self.assertListEqual(
+            [
+                sqs_mock.call_count, 
+                s3_get_mock.call_count, 
+                pre_image_mock.call_count, 
+                engine_mock.call_count,
+                post_image_mock.call_count,
+                s3_put_mock.call_count,
+            ],
+            [1, 0, 0, 0, 0, 0]
+        )
+
+
+    def test_main_4(self, sqs_mock, s3_get_mock, pre_image_mock, engine_mock, post_image_mock, s3_put_mock):
+        """
+        test_main_4 : if main function fails to get image from s3 bucket,
+        return error message. 
+        """
+        message = self.transfer_queue_message
+        message["request_body"]["content_list"] = ["mock"]
+        message["request_body"]["style_list"] = ["mock"]
+        sqs_mock.return_value = message
+        s3_get_mock.return_value = None, None, None
+        pre_image_mock.return_value = None, None, None
+        engine_mock.return_value = Mock(shape=[1, 512, 512, 3])
+        post_image_mock.return_value = "/mock/mock.mock"
+        s3_put_mock.return_value = None
+
+
+        res = transfer_client.main()
+
+        self.assertListEqual(
+            [
+                sqs_mock.call_count, 
+                s3_get_mock.call_count, 
+                pre_image_mock.call_count, 
+                engine_mock.call_count,
+                post_image_mock.call_count,
+                s3_put_mock.call_count,
+            ],
+            [1, 1, 0, 0, 0, 0]
+        )
+
+
+
+    def test_main_5(self, sqs_mock, s3_get_mock, pre_image_mock, engine_mock, post_image_mock, s3_put_mock):
+        """
+        test_main_5 : main function fails to upload transfer resutl to s3,
+        return error message
+        """
+        message = messages.S3_CANNOT_CONNECT_UPLOAD.format(
+            self.test_config.AWS_S3_ENDPOINT_URL, self.test_config.AWS_S3_BUCKET_NAME,
+            os.path.join(self.test_config.IMAGE_DIR, os.path.basename(self.transfer))
+        )
+        sqs_mock.return_value = {}
+        s3_get_mock.return_value = "", "", ""
+        pre_image_mock.return_value = None, None, None
+        engine_mock.return_value = Mock(shape=[1, 512, 512, 3])
+        post_image_mock.return_value = "/mock/mock.mock"
+        s3_put_mock.return_value = message
+
+
+        res = transfer_client.main()
+
+        self.assertEqual(
+            res["status"], 404
+        )
+
+        self.assertEqual(
+            res["response_body"]["messages"][0], message
         )
 
 
@@ -85,8 +200,8 @@ class ReceiveMEssageTestCase(BaseTestCase):
         """
         mock = Mock(
             **{
-                "get_queue_url.return_value" :self.sqs_return_queue,
-                "receive_message.return_value" :self.sqs_return_message,
+                "get_queue_url.return_value" : self.sqs_return_queue,
+                "receive_message.return_value" : self.sqs_return_message,
             }
         )
         boto_mock.client.return_value = mock
@@ -94,6 +209,52 @@ class ReceiveMEssageTestCase(BaseTestCase):
         message = transfer_client.receive_sqs_message(config=self.test_config)
 
         self.assertTrue(isinstance(message, dict))
+
+
+    def test_receive_sqs_message_3(self, boto_mock):
+        """
+        test_receive_sqs_message_3 : if fail to receive message,
+        return error messag as str
+        """
+        mock = Mock(
+            **{
+                "get_queue_url.side_effect" : Exception,
+                "receive_message.return_value" : self.sqs_return_message,
+            }
+        )
+        boto_mock.client.return_value = mock
+
+        message = transfer_client.receive_sqs_message(config=self.test_config)
+
+        self.assertEqual(
+            message,
+            messages.SQS_CANNOT_CONNECT.format(
+                self.test_config.AWS_SQS_ENDPOINT_URL, self.test_config.AWS_SQS_TRANSFER_QUEUE_NAME
+            )
+        )
+
+
+    def test_receive_sqs_message_4(self, boto_mock):
+        """
+        test_receive_sqs_message_4 : if receive no message,
+        return error messag as str
+        """
+        mock = Mock(
+            **{
+                "get_queue_url.return_value" : self.sqs_return_queue,
+                "receive_message.return_value" : {},
+            }
+        )
+        boto_mock.client.return_value = mock
+
+        message = transfer_client.receive_sqs_message(config=self.test_config)
+
+        self.assertEqual(
+            message,
+            messages.SQS_NO_MESSAGE_STORED.format(
+                self.test_config.AWS_SQS_TRANSFER_QUEUE_NAME
+            )
+        )
 
 
 @patch("transfer.client.transfer_client.boto3")
@@ -134,7 +295,6 @@ class GetImageTestCase(BaseTestCase):
         """
         # def side_effect(*arg, Filename, Bucket, Key):
         def side_effect(Filename, Bucket, Key, *args, **kwargs):
-            # print("hoge")
             pathlib.Path(Filename).touch()
 
         mock = Mock(
@@ -150,6 +310,26 @@ class GetImageTestCase(BaseTestCase):
             [os.path.exists(c), os.path.exists(s), os.path.exists(t)],
             [True, True, False]
         )
+
+
+    def test_get_images_from_s3_3(self, boto_mock):
+        """
+        test_get_images_from_s3_3 : if downloading image fails, return None
+        """
+
+        mock = Mock(
+            **{
+                "download_file.side_effect" : Exception,
+            }
+        )
+        boto_mock.client.return_value = mock
+        c, s, t = transfer_client.get_images_from_s3(self.test_config, self.message)
+
+        self.assertListEqual(
+            [c, s, t],
+            [None, None, None]
+        )
+
 
 
 # @patch("transfer.client.transfer_client")
@@ -243,4 +423,24 @@ class PutImageTestCase(BaseTestCase):
 
         self.assertEqual(mock.upload_file.call_count, 1)
 
+
+
+    def test_put_image_to_s3_2(self, boto_mock):
+        """
+        test_put_image_to_s3_2 : if uploading fails, return error message
+        """
+        message = messages.S3_CANNOT_CONNECT_UPLOAD.format(
+            self.test_config.AWS_S3_ENDPOINT_URL, self.test_config.AWS_S3_BUCKET_NAME,
+            os.path.join(self.test_config.IMAGE_DIR, os.path.basename(self.transfer))
+        )
+        mock = Mock(
+            **{
+                "upload_file.side_effect" : Exception,
+            }
+        )
+        boto_mock.client.return_value = mock
+        transfer_path = os.path.join(self.test_config.IMAGE_DIR, "transfer.png")
+        ret = transfer_client.put_image_to_s3(self.test_config, self.message, transfer_path)
+
+        self.assertEqual(ret, message)
 

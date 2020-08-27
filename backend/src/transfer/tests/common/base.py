@@ -13,8 +13,10 @@ class BaseTestCase(unittest.TestCase):
 
     base_dir = os.path.join(os.path.dirname(__file__), "..", "test_datas")
     test_config = config
+    # change config for test
     test_config.IMAGE_DIR = test_config.IMAGE_DIR.replace("/images", "/images4test")
-
+    test_config.MAX_IMAGE_SIZE = 224
+    test_config.EPOCH = 10
 
     transfer = os.path.join(base_dir, "transfer.png")
     content = os.path.join(base_dir, "content.png")
@@ -128,6 +130,8 @@ class BaseTestCase(unittest.TestCase):
             QueueUrl=self.transfer_q_url,
             MessageBody=json.dumps(message),
         )
+
+        return message
 
 
     def calc_limited_shape(self, image_path):

@@ -9,7 +9,6 @@ COPY ./config /config
 
 RUN pip install --no-cache-dir \
         Pillow==7.1.1 \
-        tqdm==4.46.0 \
         boto3==1.14.44
 
 RUN chmod +x /config/entrypoint.sh
