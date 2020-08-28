@@ -108,5 +108,5 @@ services:
       - /dev/shm:/dev/shm
     expose: 
       - 4444
-    ports: 
+    ports:
       - "4444:4444"
