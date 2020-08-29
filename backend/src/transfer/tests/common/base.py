@@ -16,7 +16,7 @@ class BaseTestCase(unittest.TestCase):
     # change config for test
     test_config.IMAGE_DIR = test_config.IMAGE_DIR.replace("/images", "/images4test")
     test_config.MAX_IMAGE_SIZE = 224
-    test_config.EPOCH = 10
+    test_config.EPOCH = 3
 
     transfer = os.path.join(base_dir, "transfer.png")
     content = os.path.join(base_dir, "content.png")

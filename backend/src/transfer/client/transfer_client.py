@@ -5,74 +5,77 @@ import copy
 import numpy as np
 from PIL import Image
 
-from transfer.common import config, messages
+from transfer.common import config, messages, exceptions
 from transfer.engine.core import NstEngine
 
 def receive_sqs_message(config):
     """
     receive a message from sqs queue
-    and return the body as dict
+    each body in messages are dict and return them as list.
     """
     clinet = boto3.client("sqs", endpoint_url=config.AWS_SQS_ENDPOINT_URL)
-    
     try:
         # get queue url
         url = clinet.get_queue_url(QueueName=config.AWS_SQS_TRANSFER_QUEUE_NAME)
-        # receive one message
-        resp = clinet.receive_message(QueueUrl=url["QueueUrl"])
+        # receive messages as many as possible
+        resp = clinet.receive_message(QueueUrl=url["QueueUrl"], MaxNumberOfMessages=10)
     except:
-        return messages.SQS_CANNOT_CONNECT.format(
-            config.AWS_SQS_ENDPOINT_URL, config.AWS_SQS_TRANSFER_QUEUE_NAME
-        )
+        raise exceptions.SQSConnectionError(config.AWS_SQS_ENDPOINT_URL, config.AWS_SQS_TRANSFER_QUEUE_NAME)
+
 
     try:
-        # convert the body into dict
-        message = json.loads(resp["Messages"][0]["Body"])
+        message_list = [json.loads(message["Body"]) for message in resp["Messages"]]
     except:
         # in case no messages are stored in sqs queue
-        return messages.SQS_NO_MESSAGE_STORED.format(
-            config.AWS_SQS_TRANSFER_QUEUE_NAME
-        )
+        raise exceptions.SQSNoMessageError(config.AWS_SQS_ENDPOINT_URL, config.AWS_SQS_TRANSFER_QUEUE_NAME)
 
-
-    return message
+    return message_list
+    # return message_list
 
 
 def get_images_from_s3(config, message):
     """
     download content and style images from s3
     and save them on local file,
-    and return these, and transfer's path
+    and return these, and transfer's path as list
     """
-    client = boto3.client("s3", endpoint_url=config.AWS_S3_ENDPOINT_URL)
+    client = boto3.client("s3", endpoint_url=message["request_body"]["s3_endpoint"])
+
+    path_list = []
+    content_list = message["request_body"]["content_list"]
+    style_list = message["request_body"]["style_list"]
+    transfer_list = message["request_body"]["transfer_list"]
+
+    for content, style, transfer in zip(content_list, style_list, transfer_list):
+
+        # create 3 paths from message
+        content_path = os.path.join(config.IMAGE_DIR, content)
+        style_path = os.path.join(config.IMAGE_DIR, style)
+        transfer_path = os.path.join(config.IMAGE_DIR, transfer)
+
+        try:
+            # download content and style images
+            res = client.download_file(
+                Filename=content_path,
+                Bucket=message["request_body"]["bucket"],
+                Key=message["request_body"]["key_prefix"] + content
+            )
+
+            res = client.download_file(
+                Filename=style_path,
+                Bucket=message["request_body"]["bucket"],
+                Key=message["request_body"]["key_prefix"] + style
+            )
+        except:
+            raise exceptions.S3DownloadError(
+                transfer, message["request_body"]["s3_endpoint"], message["request_body"]["bucket"], content, style 
+
+            )
 
 
-    # create 3 paths from message
-    content = message["request_body"]["content_list"][0]
-    style = message["request_body"]["style_list"][0]
-    transfer = message["request_body"]["transfer_list"][0]
+        path_list.append([content_path, style_path, transfer_path])
 
-    content_path = os.path.join(config.IMAGE_DIR, content)
-    style_path = os.path.join(config.IMAGE_DIR, style)
-    transfer_path = os.path.join(config.IMAGE_DIR, transfer)
-
-    try:
-        # download content and style images
-        res = client.download_file(
-            Filename=content_path,
-            Bucket=message["request_body"]["bucket"],
-            Key=message["request_body"]["key_prefix"] + content
-        )
-
-        res = client.download_file(
-            Filename=style_path,
-            Bucket=message["request_body"]["bucket"],
-            Key=message["request_body"]["key_prefix"] + style
-        )
-    except:
-        return None, None, None
-
-    return content_path, style_path, transfer_path
+    return path_list
 
 
 def preprocess_image(config, image_path):
@@ -150,103 +153,83 @@ def put_image_to_s3(config, message, transfer_path):
     key = message["request_body"]["key_prefix"] + os.path.basename(transfer_path)
     bucket = message["request_body"]["bucket"]
 
-    client = boto3.client("s3", endpoint_url=config.AWS_S3_ENDPOINT_URL)
+    client = boto3.client("s3", endpoint_url=message["request_body"]["s3_endpoint"])
     try:
         client.upload_file(Filename=transfer_path, Bucket=bucket, Key=key)
     except:
-        return messages.S3_CANNOT_CONNECT_UPLOAD.format(
-            config.AWS_S3_ENDPOINT_URL, config.AWS_S3_BUCKET_NAME,
-            transfer_path,
+        raise exceptions.S3UploadError(
+            os.path.basename(transfer_path), message["request_body"]["s3_endpoint"], bucket
         )
-
     
     return None
 
 def main():
-    
-    # receive sqs message as dict
-    message = receive_sqs_message(config)
-    if isinstance(message, str):
-        return {
-            "status" : 404,
-            "response_body" : {
-                "messages" : [
-                    message
-                ],
-            },
-        }
 
+    response = copy.deepcopy(messages.RESPONSE_BODY)
+    # receive sqs message list. each message are dict
     try:
-        # get content and style images from s3, and return these and transfer's path
-        content_path, style_path, transfer_path = get_images_from_s3(config, message)
-        if content_path is None or style_path is None:
-            key_prefix = message["request_body"]["key_prefix"]
-            return {
-                "status" : 404,
-                "response_body" : {
-                    "messages" : [
-                        messages.S3_CANNOT_CONNECT_DOWNLOAD.format(
-                            config.AWS_S3_ENDPOINT_URL, config.AWS_S3_BUCKET_NAME,
-                            key_prefix + message["request_body"]["content_list"][0],
-                            key_prefix + message["request_body"]["style_list"][0],
-                        )
-                    ],
-                },
-            }
+        message_list = receive_sqs_message(config)
+    except exceptions.SQSConnectionError as ex:
+        response["message_list"].append(ex.get_message())
+        return response
+    except exceptions.SQSNoMessageError as ex:
+        response["message_list"].append(ex.get_message())
+        return response
 
-        # preprocess image and return as ndarray
-        # no need to consder exception
-        content = preprocess_image(config, content_path)
-        style = preprocess_image(config, style_path)
 
-        # call engine
-        # no need to consder exception
-        transfer = call_engine(config, content=content, style=style)
-
-        # postprocess transfer image
-        # no need to consder exception
-        transfer_path = postprocess_image(config, transfer, transfer_path)
-
-        # put transfer image to s3
-        res = put_image_to_s3(config, message, transfer_path)
-        if isinstance(res, str):
-            return {
-                "status" : 404,
-                "response_body" : {
-                    "messages" : [
-                        res
-                    ],
-                },
-            }
-        
-        
-        return {
-            "status" : 200,
-            "response_body" : {
-                "transfer_list" : [
-                    {
-                        "image_name" : os.path.basename(transfer_path),
-                        "size" : transfer.shape[-2:0:-1],
-                    },
-                ],
-            },
-        }
-
-    finally:
-        # cleanup all local images
-        def cleanup_file(path):
+    # processing according to each message
+    for message in message_list:
+        path_list = None
+        try:
+            # get content and style images from s3, and return these and transfer's path as list
+            # e.g. [["content_path", "style_path", "transfer_path"], ["content_path", "style_path", "transfer_path"]]
             try:
-                os.remove(path)
-            except FileNotFoundError:
-                pass
-        
-        if content_path is not None:
-            cleanup_file(content_path)
-        if style_path is not None:
-            cleanup_file(style_path)
-        if transfer_path is not None:
-            cleanup_file(transfer_path)
+                path_list = get_images_from_s3(config, message)
+            except exceptions.S3DownloadError as ex:
+                response["message_list"].append(ex.get_message())
+                continue
+    
 
+            for content_path, style_path, transfer_path in path_list:
+                # preprocess image and return as ndarray
+                # no need to consder exception
+                content = preprocess_image(config, content_path)
+                style = preprocess_image(config, style_path)
+
+                # call engine
+                # no need to consder exception
+                transfer = call_engine(config, content=content, style=style)
+
+                # postprocess transfer image
+                # no need to consder exception
+                transfer_path = postprocess_image(config, transfer, transfer_path)
+
+                # put transfer image to s3
+                try:
+                    res = put_image_to_s3(config, message, transfer_path)
+                except exceptions.S3UploadError as ex:
+                    response["message_list"].append(
+                        ex.get_message()
+                    )
+                    continue
+
+            
+
+                response["message_list"].append(
+                    messages.TRANSFER_SUCCESS.format(
+                        os.path.basename(transfer_path), transfer.shape[-2:0:-1]
+                    )
+                )
+        finally:
+            if path_list is not None:
+                path_list = [p for paths in path_list for p in paths]
+                for path in path_list:
+                    try:
+                        os.remove(path)
+                    except FileNotFoundError:
+                        pass
+
+    return response
 
 def run_locally(content_path, style_path, transfer_path):
     # preprocess image and return as ndarray
@@ -261,14 +244,13 @@ def run_locally(content_path, style_path, transfer_path):
     transfer_path = postprocess_image(config, transfer, transfer_path)
 
 
+
 if __name__ == "__main__":
 
     import sys
     import time
     start = time.time()
-    print(sys.argv)
     run_locally(*sys.argv[1:])
-
     end = time.time()
 
     print(round(end - start))

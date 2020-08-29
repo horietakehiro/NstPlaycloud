@@ -9,4 +9,4 @@ export AWS_S3_BUCKET_NAME=nstpc-test
 export AWS_SQS_TRANSFER_QUEUE_NAME=nstpc-transfer-test
 
 
-nosetests -v $1
+nosetests $1
