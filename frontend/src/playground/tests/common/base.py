@@ -1,6 +1,7 @@
 from django.test import TestCase
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.files.images import ImageFile
+from django.contrib.auth.models import User
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 
 from django.conf import settings
 
@@ -11,10 +12,12 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 from selenium.webdriver.support.select import Select
+from selenium.webdriver.common.keys import Keys
 options = webdriver.ChromeOptions()
 
 from playground.models import Image
 from playground import messages
+
 
 class BaseTestCase(StaticLiveServerTestCase):
     base_dir = os.path.join(os.path.dirname(__file__), "..", "test_datas")
@@ -31,8 +34,13 @@ class BaseTestCase(StaticLiveServerTestCase):
     delete_q_url = None
     transfer_q_url = None
 
+    login_user = None
+    login_username = "nstpc-test-user"
+    login_userpass = "nstpc-test-pass"
+
     @classmethod
     def setUpClass(cls):
+
         # create bucket for test
         cls.aws_s3_client = boto3.client("s3", endpoint_url=settings.AWS_S3_ENDPOINT_URL)
         cls.aws_s3_resource = boto3.resource("s3", endpoint_url=settings.AWS_S3_ENDPOINT_URL)
@@ -50,11 +58,19 @@ class BaseTestCase(StaticLiveServerTestCase):
         return super().setUpClass()
 
     def setUp(self):
+        self.login_user = User.objects.create_superuser(
+            username=self.login_username,
+            password=self.login_userpass,
+        )
+        self.client.force_login(self.login_user)
+
+
         if str(self.host) in self.live_server_url:
             self.live_server_url = self.live_server_url.replace(
                 str(self.host), os.environ.get('HOSTNAME'),
             )
         return super().setUp()
+
 
     def setUp_driver(self):
         if self.driver is not None:
@@ -64,6 +80,17 @@ class BaseTestCase(StaticLiveServerTestCase):
             options=options,
         )
         self.driver.file_detector = LocalFileDetector()
+
+        # login
+        self.driver.get(self.live_server_url)
+        if self.driver.current_url.startswith(self.live_server_url + "/admin/login"):
+            username = self.get_element("id", "id_username")
+            username.send_keys(self.login_username)
+            password = self.get_element("id", "id_password")
+            password.send_keys(self.login_userpass)
+            password.send_keys(Keys.ENTER)
+
+
 
     @classmethod
     def tearDownClass(cls):
@@ -82,6 +109,8 @@ class BaseTestCase(StaticLiveServerTestCase):
         return super().tearDownClass()
 
     def tearDown(self):
+        self.client.logout()
+
         # delete all objects
         self.aws_s3_resource.Bucket(
             settings.AWS_STORAGE_BUCKET_NAME
@@ -93,6 +122,7 @@ class BaseTestCase(StaticLiveServerTestCase):
 
 
     def get_element(self, kind, target, single=True, driver=None):
+
         max_wait = 5
         start = time.time()
 
@@ -114,6 +144,7 @@ class BaseTestCase(StaticLiveServerTestCase):
                     time.sleep(0.5)
             except Exception as ex:
                 raise ex        
+
 
     def upload_image(self, image_path):
         if self.driver.title != "NstPlayground":
@@ -140,12 +171,22 @@ class BaseTestCase(StaticLiveServerTestCase):
             )
         return image
 
+
     def create_tmp_driver(self):
         driver = webdriver.Remote(
             command_executor='http://browser:4444/wd/hub',
             options=options,
         )
         driver.file_detector = LocalFileDetector()
+        # login
+        driver.get(self.live_server_url)
+        if driver.current_url.startswith(self.live_server_url + "/admin/login"):
+            username = self.get_element("id", "id_username", driver=driver)
+            username.send_keys(self.login_username)
+            password = self.get_element("id", "id_password", driver=driver)
+            password.send_keys(self.login_userpass)
+            password.send_keys(Keys.ENTER)
+
         return driver
 
 

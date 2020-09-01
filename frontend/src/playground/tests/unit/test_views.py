@@ -1,8 +1,9 @@
 from ..common.base import BaseTestCase
 from django.contrib import messages
+from django.contrib.auth.models import User
+from django.core.files.images import ImageFile
 
 import os
-from django.core.files.images import ImageFile
 
 from unittest.mock import patch, Mock
 
@@ -11,6 +12,7 @@ from playground import messages
 
 
 class ImageListTestCase(BaseTestCase):
+
 
     def test_image_list_1(self):
         """
@@ -27,7 +29,7 @@ class ImageListTestCase(BaseTestCase):
         self.assertEqual(
             resp.status_code, 405
         )
-        
+
 
 
 @patch("playground.forms.ImageForm.save")

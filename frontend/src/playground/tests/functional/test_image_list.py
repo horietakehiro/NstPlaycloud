@@ -19,7 +19,7 @@ class ImageListTestCase(BaseTestCase):
 
         # open the page
         self.driver.get(self.live_server_url)
-        h2 = self.get_element("tag_name" ,"h2")        
+        h2 = self.get_element("tag_name" ,"h2")
         self.assertEqual(h2.text, "ImageList")
 
         # upload images

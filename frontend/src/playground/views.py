@@ -2,15 +2,22 @@ from django.shortcuts import render, redirect, HttpResponse
 from django.contrib import messages
 from django.conf import settings
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+
 
 from playground.models import Image, Result
 from playground.forms import ImageForm, TransferForm
 from playground import messages as playground_messages
 
 
+# diverse django's default admin site for login authentication
+login = login_required(login_url="/admin/login/")
 
 # Create your views here.
+@login
 def image_list(request):
+
+
     if request.method != "GET":
         return HttpResponse(status=405)
         
@@ -29,7 +36,7 @@ def image_list(request):
         },
     )
 
-
+@login
 def upload(request):
     if request.method != "POST":
         return HttpResponse(status=405)
@@ -49,6 +56,7 @@ def upload(request):
     return redirect("image_list")
 
 
+@login
 def delete(request, image_id):
     # only accept post method
     if request.method != "POST":
@@ -92,6 +100,7 @@ def delete(request, image_id):
 
     return redirect("image_list")
 
+@login
 def transfer(request):
     if request.method != "POST":
         messages.add_message(
@@ -136,6 +145,7 @@ def transfer(request):
 
 
 
+@login
 def result_list(request, image_id=0):
     if request.method != "GET":
         return HttpResponse(status=405)
