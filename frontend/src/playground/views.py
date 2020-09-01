@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-
+from django.contrib.auth import logout as auth_logout
 
 from playground.models import Image, Result
 from playground.forms import ImageForm, TransferForm
@@ -171,3 +171,10 @@ def result_list(request, image_id=0):
             "transfer_form" : transfer_form,
         },
     )
+
+
+def logout(request):
+
+    auth_logout(request)
+
+    return redirect("image_list")

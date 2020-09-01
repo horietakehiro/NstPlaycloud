@@ -15,6 +15,8 @@
         {% endfor %}
     </ul>
     {% endif %}
+
+    <a href="{% url 'logout' %}">Log out</a>
     
     <form action="{% url 'upload' %}" method="POST" id="upload" enctype="multipart/form-data">
         {% csrf_token %}

@@ -317,3 +317,19 @@ class ResultListTestCase(BaseTestCase):
         self.assertTemplateUsed(resp, "playground/result_list.html")
 
 
+class LogoutTestCase(BaseTestCase):
+
+    def test_logout_1(self):
+        """
+        test_logout_1 : once logged out, redirect to login home
+        """
+        # make suer client has logged in
+        self.client.force_login(self.login_user)
+
+        resp = self.client.get("/logout/")
+
+        self.assertRedirects(
+            resp, "/image_list/", 
+            status_code=302, target_status_code=200,
+            fetch_redirect_response=False,
+        )
