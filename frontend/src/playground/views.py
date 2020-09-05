@@ -180,6 +180,8 @@ def result_list(request, image_id=0):
 
 @login
 def masking(request, result_id):
+    image_form = ImageForm()
+    transfer_form = TransferForm()
 
     try:
         result = Result.objects.get(id=result_id)
@@ -190,6 +192,18 @@ def masking(request, result_id):
             playground_messages.MASKING_FAIL_DATA_NOTFOUND.format(result_id)
         )
         return redirect("image_list")
+
+    if result.is_masked:
+        return render(
+            request,
+            "playground/masking.html",
+            {
+                "result" : result,
+                "image_form" : image_form,
+                "transfer_form" : transfer_form,
+            }
+        )
+
 
     # send request to apigateway
     request_body = playground_messages.MASKING_MESSAGE
@@ -214,9 +228,8 @@ def masking(request, result_id):
         )
         return redirect("image_list")
 
-
-    image_form = ImageForm()
-    transfer_form = TransferForm()
+    result.is_masked = True
+    result.save()
 
     return render(
         request,

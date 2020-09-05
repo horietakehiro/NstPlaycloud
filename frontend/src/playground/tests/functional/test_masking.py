@@ -108,4 +108,60 @@ class MaskingTestCase(BaseTestCase):
 
         
 
-        
+    def test_masking_4(self):
+        """
+        test_masking_4 : select the transfer image on result_list page,
+        and move to masking page.
+        once back to image_list page and again move to masking page,
+        no need to call apigateway
+        """
+        self.setUp_driver()
+
+        # register one transfer result
+        self.exec_transfer(self.content, self.style)
+        self.driver.get(self.live_server_url + "/result_list/0/")
+
+        masking = self.get_element("class_name", "Masking")
+        masking.click()
+
+
+        h2 = self.get_element("tag_name", "h2")
+        self.assertEqual(h2.text, "Masking")
+
+        trasnfer_list = self.get_element("class_name", "TransferData", single=False)
+        self.assertEqual(len(trasnfer_list), 2)
+
+        # back to image_list page
+        self.driver.get(self.live_server_url + "/result_list/0/")
+        h2 = self.get_element("tag_name", "h2")
+        self.assertEqual(h2.text, "ResultList")
+
+
+        # temporarily delete lambda function associated with apigateway
+        self.aws_lambda_client.delete_function(FunctionName=self.lambda_ok)
+
+        # request masking
+        masking = self.get_element("class_name", "Masking")
+        action = self.get_element("id", "masking")
+        result_id = action.get_attribute("action").split("/")[-1]
+        masking.click()
+
+        # recreate lambda function
+        with open(self.lambda_zipcode, "rb") as code:
+            data = code.read()
+            # ok
+            self.aws_lambda_client.create_function(
+                FunctionName=self.lambda_ok,
+                Runtime="python3.6",
+                Role="dummy",
+                Handler="dummy_lambda.lambda_handler_ok",
+                Code={"ZipFile" : data}
+            )
+
+        # if the masking page has been already visited,
+        # no need to call masking api.
+        h2 = self.get_element("tag_name", "h2")
+        self.assertEqual(h2.text, "Masking")
+
+        trasnfer_list = self.get_element("class_name", "TransferData", single=False)
+        self.assertEqual(len(trasnfer_list), 2)

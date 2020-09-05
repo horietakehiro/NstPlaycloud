@@ -123,6 +123,8 @@ class Result(models.Model):
         related_name='style'
     )
 
+    is_masked = models.BooleanField(default=False)
+
     sqs_client = boto3.client("sqs", endpoint_url=settings.AWS_SQS_ENDPOINT_URL)
 
     def __init__(self, *args, **kwargs):

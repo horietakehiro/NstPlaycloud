@@ -391,3 +391,20 @@ class MaskingTestCase(BaseTestCase):
         self.assertRedirects(
             resp, "/image_list/", 
         )
+
+    
+
+    @patch("playground.views.requests")
+    def test_masking_4(self, req_mock):
+        """
+        test_masking_4 : if masking has been already done,
+        render masking page without calling masking api.
+        """
+        req_mock.post.return_value = Mock(**{"status_code" : 200})
+        # prepare transfer result
+        result = self.create_result_record()
+        
+        resp = self.client.post("/masking/{}".format(result.id))
+        resp = self.client.post("/masking/{}".format(result.id))
+
+        self.assertEqual(req_mock.post.call_count, 1)
