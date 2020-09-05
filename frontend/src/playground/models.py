@@ -28,6 +28,34 @@ class Image(models.Model):
     def thumbnail_url(self):
         return self.image.url.replace("/original/", "/thumbnail/")
 
+    @property
+    def masked_url(self):
+        return self.image.url.replace("/raw/", "/masked/")
+    @property
+    def thumb_masked_url(self):
+        return self.masked_url.replace("/original/", "/thumbnail/")
+
+    @property
+    def masked_inv_url(self):
+        return self.image.url.replace("/raw/", "/masked_inv/")
+    @property
+    def thumb_masked_inv_url(self):
+        return self.masked_inv_url.replace("/original/", "/thumbnail/")
+    
+    @property
+    def binned_url(self):
+        return self.image.url.replace("/raw/", "/binned/")
+    @property
+    def thumb_binned_url(self):
+        return self.binned_url.replace("/original/", "/thumbnail/")
+
+    @property
+    def binned_inv_url(self):
+        return self.image.url.replace("/raw/", "/binned_inv/")
+    @property
+    def thumb_binned_inv_url(self):
+        return self.binned_inv_url.replace("/original/", "/thumbnail/")
+    
 
     @classmethod
     def send_delete_message(cls, message):

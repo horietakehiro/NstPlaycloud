@@ -19,7 +19,7 @@ services:
       - LOCALSTACK_DOCKER_NAME=localstack
       - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
       - HOSTNAME_EXTERNAL=localstack
-      - SERVICES=s3,lambda,sqs
+      - SERVICES=iam,s3,lambda,sqs,apigateway
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
       - DOCKER_HOST=unix:///var/run/docker.sock
@@ -65,6 +65,7 @@ services:
       - PYTHONPATH=/app/frontend
       - AWS_SQS_ENDPOINT_URL=http://localstack:4566/
       - AWS_S3_ENDPOINT_URL=http://localstack:4566/
+      - AWS_APIGW_ENDPOINT_URL=http://localstack:4566/
 
     volumes:
       - ./frontend/src:/app/frontend

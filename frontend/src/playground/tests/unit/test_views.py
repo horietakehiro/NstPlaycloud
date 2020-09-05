@@ -333,3 +333,61 @@ class LogoutTestCase(BaseTestCase):
             status_code=302, target_status_code=200,
             fetch_redirect_response=False,
         )
+
+
+class MaskingTestCase(BaseTestCase):
+
+    @patch("playground.views.requests")
+    def test_masking_1(self, req_mock):
+        """
+        test_masking_1 : views masking page related to specified transfer resutl
+        """
+        req_mock.post.return_value = Mock(**{"status_code" : 200})
+        # prepare transfer result
+        result = self.create_result_record()
+        
+        resp = self.client.post("/masking/{}".format(result.id))
+
+        self.assertTemplateUsed(resp, "playground/masking.html")
+
+
+    def test_masking_2(self):
+        """
+        test_masking_2 : if resutl record specified by result id does not exist,
+        redirect to image_list with error message
+        """
+
+        resp = self.client.post("/masking/{}".format(999))
+
+        self.assertRedirects(resp, "/image_list/")
+
+    @patch("playground.views.requests")
+    def test_masking_3(self, req_mock):
+        """
+        test_masking_3 : if the request to apigateway fails,
+        redirect to image_list with error message 
+        """
+        req_mock.return_value = Mock(**{"status_code" : 500})
+        # prepare transfer result
+        result = self.create_result_record()
+        resp = self.client.post("/masking/{}".format(result.id))
+
+        self.assertRedirects(
+            resp, "/image_list/", 
+        )
+
+
+    @patch("playground.views.utils")
+    def test_masking_3(self, util_mock):
+        """
+        test_masking_4 : if cannot get api's url,
+        redirect to image_list with error message
+        """
+        util_mock.get_masking_api_url.return_value = None
+        # prepare transfer result
+        result = self.create_result_record()
+        resp = self.client.post("/masking/{}".format(result.id))
+
+        self.assertRedirects(
+            resp, "/image_list/", 
+        )

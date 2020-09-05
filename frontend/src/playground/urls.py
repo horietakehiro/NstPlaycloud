@@ -10,6 +10,8 @@ urlpatterns = [
     path("transfer", views.transfer, name="transfer"),
 
     path("result_list/<int:image_id>/", views.result_list, name="result_list"),
+    path("masking/<int:result_id>", views.masking, name="masking"),
+
     path("logout/", views.logout, name="logout"),
 
 

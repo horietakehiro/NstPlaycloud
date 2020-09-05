@@ -13,12 +13,15 @@ DELETE_FAIL_NOTEXISTS="ImageId : {} is not exists."
 DELETE_FAIL_INVALID_METHOD="Delete operation accepts only POST method."
 DELETE_WARNING="Queue message for deletion cannot' be sent. Endpoint : {} is wrong or Queue : {} does not exists."
 
-#TRANSFER
+# TRANSFER
 TRANSFER_SUCCESS="Transfer is successfully requestd with content : {} / style : {}"
 TRANSFER_FAIL_INVALID="Reuqest parameter is invalid." 
 TRANSFER_FAIL_INVALID_METHOD="Transfer operation accepts only POST method."
 TRANSFER_WARNING="Queue message for transfer cannot' be sent. Endpoint : {} is wrong or Queue : {} does not exists."
 
+# MASKING
+MASKING_FAIL_DATA_NOTFOUND="Masking fails. Result record with id : {} does not exist."
+MASKING_FAIL_CANNOT_REQUEST="Masking fails. Request : {} could not be sent."
 
 ### messages for sqs
 # DELETE
@@ -55,4 +58,17 @@ TRANSFER_QUEUE_MESSAGE = {
         "bucket" : settings.AWS_STORAGE_BUCKET_NAME,
         "s3_endpoint" : settings.AWS_S3_ENDPOINT_URL,
     }
+}
+
+# MASKING
+    # retdict["s3_endpoint"] = s3_endpoint
+    # retdict["bucket"] = bucket
+    # retdict["content"] = content
+    # retdict["transfer"] = transfer
+
+MASKING_MESSAGE = {
+    "s3_endpoint" : settings.AWS_S3_ENDPOINT_URL,
+    "bucket" : settings.AWS_STORAGE_BUCKET_NAME,
+    "content" : None,
+    "transfer" : None,
 }

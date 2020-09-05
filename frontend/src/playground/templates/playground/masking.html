@@ -1,0 +1,68 @@
+{% extends 'playground/base.html' %}
+
+{% block content %}
+{% load static %}
+<h2>Masking</h2>
+<a href="{% url 'image_list' %}" id="image_list_link">ImageList</a>
+
+
+<table>
+    <th>TransferData</th>
+    <th>ContentData</th>
+    <th>BinnedData</th>
+    <th>MaskedData</th>
+    <tr>
+
+        <td class="TransferData">
+            <a href="{{ result.transfer.image.url }}">
+                <img src="{{ result.transfer.thumbnail_url }}">
+            </a>
+        </td>
+        <td class="ContentData">
+            <a href="{{ result.content.image.url }}">
+                <img src="{{ result.content.thumbnail_url }}">
+            </a>
+        </td>
+        <td class="BinnedData">
+            <a href="{{ result.transfer.binned_url }}">
+                <img src="{{ result.transfer.thumb_binned_url }}">
+            </a>
+        </td>
+        <td class="MaskedData">
+            <a href="{{ result.transfer.masked_url }}">
+                <img src="{{ result.transfer.thumb_masked_url }}">
+            </a>
+        </td>
+    </tr>
+
+    <th>TransferData</th>
+    <th>ContentData</th>
+    <th>BinnedInvData</th>
+    <th>MaskedInvData</th>
+    <tr>
+        <td class="TransferData">
+            <a href="{{ result.transfer.image.url }}">
+                <img src="{{ result.transfer.thumbnail_url }}">
+            </a>
+        </td>
+        <td class="ContentData">
+            <a href="{{ result.content.image.url }}">
+                <img src="{{ result.content.thumbnail_url }}">
+            </a>
+        </td>
+        <td class="BinnedInvData">
+            <a href="{{ result.transfer.binned_inv_url }}">
+                <img src="{{ result.transfer.thumb_binned_inv_url }}">
+            </a>
+        </td>
+        <td class="MaskedInvData">
+            <a href="{{ result.transfer.masked_inv_url }}">
+                <img src="{{ result.transfer.thumb_masked_inv_url }}">
+            </a>
+        </td>
+
+    </tr>
+</table>
+
+
+{% endblock content %}

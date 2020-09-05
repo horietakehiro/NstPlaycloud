@@ -8,7 +8,12 @@ from django.contrib.auth import logout as auth_logout
 from playground.models import Image, Result
 from playground.forms import ImageForm, TransferForm
 from playground import messages as playground_messages
+from playground.storages import MediaStorage
+from playground import utils
 
+import requests
+import json
+import boto3
 
 # diverse django's default admin site for login authentication
 login = login_required(login_url="/admin/login/")
@@ -173,8 +178,61 @@ def result_list(request, image_id=0):
     )
 
 
+@login
+def masking(request, result_id):
+
+    try:
+        result = Result.objects.get(id=result_id)
+    except Result.DoesNotExist:
+        messages.add_message(
+            request,
+            messages.ERROR,
+            playground_messages.MASKING_FAIL_DATA_NOTFOUND.format(result_id)
+        )
+        return redirect("image_list")
+
+    # send request to apigateway
+    request_body = playground_messages.MASKING_MESSAGE
+    request_body["content"] = MediaStorage.location + "/" + result.content.image.name
+    request_body["transfer"] = MediaStorage.location + "/" + result.transfer.image.name
+    # create masking api's url
+    url = utils.get_masking_api_url()
+    if url is None:
+        messages.add_message(
+            request,
+            messages.ERROR,
+            playground_messages.MASKING_FAIL_CANNOT_REQUEST.format(url)
+        )
+        return redirect("image_list")
+    
+    res = requests.post(url, data=json.dumps(request_body))
+    if res.status_code != 200:
+        messages.add_message(
+            request,
+            messages.ERROR,
+            playground_messages.MASKING_FAIL_CANNOT_REQUEST.format(url)
+        )
+        return redirect("image_list")
+
+
+    image_form = ImageForm()
+    transfer_form = TransferForm()
+
+    return render(
+        request,
+        "playground/masking.html",
+        {
+            "result" : result,
+            "image_form" : image_form,
+            "transfer_form" : transfer_form,
+        }
+    )
+
+
+
 def logout(request):
 
     auth_logout(request)
 
     return redirect("image_list")
+

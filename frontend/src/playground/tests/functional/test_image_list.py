@@ -111,12 +111,11 @@ class ImageListTestCase(BaseTestCase):
 
         # tempolarily delete bucket
         self.aws_s3_resource.Bucket(
-            "nstpc-test"
+            settings.AWS_STORAGE_BUCKET_NAME,
         ).objects.all().delete()
         self.aws_s3_resource.Bucket(
-            "nstpc-test"
+            settings.AWS_STORAGE_BUCKET_NAME,
         ).delete()
-        # self.aws_s3_client.delete_bucket(Bucket="nstpc-test")
 
 
         # open the page
@@ -128,7 +127,7 @@ class ImageListTestCase(BaseTestCase):
         self.upload_image(self.content)
         message_list = self.get_element("class_name", "messages", single=False)
         # recreate bucket
-        self.aws_s3_client.create_bucket(Bucket="nstpc-test")
+        self.aws_s3_client.create_bucket(Bucket=settings.AWS_STORAGE_BUCKET_NAME)
 
         self.assertIn(
             messages.UPLOAD_FAIL_S3ERROR,
@@ -428,4 +427,3 @@ class ImageListTestCase(BaseTestCase):
         self.assertEqual(h2.text, "ResultList")
 
         
-    

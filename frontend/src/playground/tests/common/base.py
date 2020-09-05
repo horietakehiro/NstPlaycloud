@@ -8,6 +8,7 @@ from django.conf import settings
 import os
 import time
 import boto3
+import requests
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.file_detector import LocalFileDetector
@@ -15,7 +16,7 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.keys import Keys
 options = webdriver.ChromeOptions()
 
-from playground.models import Image
+from playground.models import Image, Result
 from playground import messages
 
 
@@ -28,11 +29,31 @@ class BaseTestCase(StaticLiveServerTestCase):
 
     host = '0.0.0.0'
     driver = None
+    
     aws_s3_client = None
     aws_s3_resource = None
+
     aws_sqs_client = None
     delete_q_url = None
     transfer_q_url = None
+
+    aws_lambda_client = None
+    lambda_ok = "test_lambda_ok"
+    lambda_ng = "test_lambda_ng"
+    lambda_zipcode = os.path.join(
+        os.path.dirname(__file__), "dummy_lambda.zip",
+    )
+
+
+    aws_apigw_client = None
+    rest_api_id = None
+    parent_id = None
+    resource_id = None
+    deployment_id = None
+    lambda_url_ok = None
+    lambda_url_ng = None
+
+
 
     login_user = None
     login_username = "nstpc-test-user"
@@ -54,6 +75,98 @@ class BaseTestCase(StaticLiveServerTestCase):
         res = cls.aws_sqs_client.create_queue(QueueName=settings.AWS_SQS_TRANSFER_QUEUE_NAME)
         cls.transfer_q_url = res["QueueUrl"]
 
+
+        # create lambda and apigateway
+        cls.aws_lambda_client = boto3.client("lambda", 
+            endpoint_url=settings.AWS_APIGW_ENDPOINT_URL, 
+            region_name=settings.AWS_REGION,
+        )
+        cls.aws_apigw_client = boto3.client("apigateway", 
+            endpoint_url=settings.AWS_APIGW_ENDPOINT_URL, 
+            region_name=settings.AWS_REGION,
+        )
+        # lambda
+        with open(cls.lambda_zipcode, "rb") as code:
+            data = code.read()
+            # ok
+            cls.aws_lambda_client.create_function(
+                FunctionName=cls.lambda_ok,
+                Runtime="python3.6",
+                Role="dummy",
+                Handler="dummy_lambda.lambda_handler_ok",
+                Code={"ZipFile" : data}
+            )
+            # ng
+            cls.aws_lambda_client.create_function(
+                FunctionName=cls.lambda_ng,
+                Runtime="python3.6",
+                Role="dummy",
+                Handler="dummy_lambda.lambda_handler_ng",
+                Code={"ZipFile" : data}
+            )
+
+        # apigateway
+        res = cls.aws_apigw_client.create_rest_api(name=settings.AWS_APIGW_RESTAPI_NAME)
+        cls.rest_api_id = res["id"]
+        res = cls.aws_apigw_client.get_resources(restApiId=cls.rest_api_id)
+        cls.parent_id = res["items"][0]["id"] # root resource id (/)
+
+        # ok
+        res = cls.aws_apigw_client.create_resource(
+            restApiId=cls.rest_api_id, 
+            parentId=cls.parent_id, pathPart=settings.AWS_APIGW_MASKING_PATH
+        )
+        cls.resource_id = res["id"]
+        res = cls.aws_apigw_client.put_method(
+            restApiId=cls.rest_api_id, 
+            resourceId=cls.resource_id, 
+            httpMethod="POST", 
+            authorizationType="None"
+        )
+        res = cls.aws_lambda_client.get_function(FunctionName=cls.lambda_ok)
+        lambda_arn = res["Configuration"]["FunctionArn"]
+        uri = f"arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/{lambda_arn}/invocations"
+        res = cls.aws_apigw_client.put_integration(
+            restApiId=cls.rest_api_id, 
+            resourceId=cls.resource_id, 
+            httpMethod="POST", 
+            type="AWS_PROXY", 
+            integrationHttpMethod="POST",
+            uri=uri
+        )
+        cls.lambda_url_ok = f"{settings.AWS_APIGW_ENDPOINT_URL}restapis/{cls.rest_api_id}/test/_user_request_/{settings.AWS_APIGW_MASKING_PATH}"
+
+
+        # ng
+        res = cls.aws_apigw_client.create_resource(
+            restApiId=cls.rest_api_id, 
+            parentId=cls.parent_id, pathPart=settings.AWS_APIGW_MASKING_PATH + "_ng"
+        )
+        cls.resource_id = res["id"]
+        res = cls.aws_apigw_client.put_method(
+            restApiId=cls.rest_api_id, 
+            resourceId=cls.resource_id, 
+            httpMethod="POST", 
+            authorizationType="None"
+        )
+        res = cls.aws_lambda_client.get_function(FunctionName=cls.lambda_ng)
+        lambda_arn = res["Configuration"]["FunctionArn"]
+        uri = f"arn:aws:apigateway:{settings.AWS_REGION}:lambda:path/2015-03-31/functions/{lambda_arn}/invocations"
+        res = cls.aws_apigw_client.put_integration(
+            restApiId=cls.rest_api_id, 
+            resourceId=cls.resource_id, 
+            httpMethod="POST", 
+            type="AWS_PROXY", 
+            integrationHttpMethod="POST",
+            uri=uri
+        )
+        cls.lambda_url_ng = f"{settings.AWS_APIGW_ENDPOINT_URL}restapis/{cls.rest_api_id}/test/_user_request_/{settings.AWS_APIGW_MASKING_PATH + '_ng'}"
+
+        res = cls.aws_apigw_client.create_deployment(
+            restApiId=cls.rest_api_id, 
+            stageName="test",
+        )
+        cls.deployment_id = res["id"]
 
         return super().setUpClass()
 
@@ -104,6 +217,17 @@ class BaseTestCase(StaticLiveServerTestCase):
         # delete queue
         cls.aws_sqs_client.delete_queue(QueueUrl=cls.delete_q_url)
         cls.aws_sqs_client.delete_queue(QueueUrl=cls.transfer_q_url)
+
+        # delete apigateway
+        res = cls.aws_apigw_client.get_rest_apis()
+        for item in res["items"]:
+            if item["name"].startswith("test"):
+                cls.aws_apigw_client.delete_rest_api(restApiId=item["id"])
+        # delete functions
+        res = cls.aws_lambda_client.list_functions()
+        for function in res["Functions"]:
+            if function["FunctionName"].startswith("test"):
+                cls.aws_lambda_client.delete_function(FunctionName=function["FunctionName"])
 
 
         return super().tearDownClass()
@@ -172,6 +296,25 @@ class BaseTestCase(StaticLiveServerTestCase):
         return image
 
 
+    def create_result_record(self, content_path=None, style_path=None):
+        """
+        return result object
+        """
+        c = self.content if content_path is None else content_path
+        s = self.style if style_path is None else style_path
+
+        content = self.create_image_record(c)
+        style = self.create_image_record(s)
+
+        transfer, _ = Image.create_transfer_image(content_id=content.id, style_id=style.id)
+        resutl = Result.objects.create(transfer_id=transfer.id, content_id=content.id, style_id=style.id)
+
+        return resutl
+        
+
+
+
+
     def create_tmp_driver(self):
         driver = webdriver.Remote(
             command_executor='http://browser:4444/wd/hub',
@@ -227,3 +370,20 @@ class BaseTestCase(StaticLiveServerTestCase):
             ),
             [m.text for m in message_list],
         )
+
+    # def create_dummy_function(self, code_zipfile=None):
+    #     if code_zipfile is None:
+    #         code_zipfile = os.path(os.path.dirname(__file__), "dummy_lambda.zip")
+        
+    #     with open(code_zipfile, "rb") as code:
+    #         ret = self.aws_lambda_client.create_function(
+    #             FunctionName=self.lambda_funcname,
+    #             Runtime="python3.6",
+    #             Role="dummy",
+    #             Handler="dummy_lambda.lambda_handler",
+    #             Code={"ZipFile" : code}
+    #         )
+
+    
+    # def create_rest_api(self):
+        

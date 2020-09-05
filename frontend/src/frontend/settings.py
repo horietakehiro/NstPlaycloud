@@ -126,12 +126,15 @@ USE_L10N = True
 USE_TZ = True
 
 
+
+LOGIN_REDIRECT_URL="image_list"
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
+# settings for AWS
+AWS_REGION="us-east-1"
 # settings for using s3 bucekt as static and media storage
-# DEFAULT_FILE_STORAGE="storages.backends.s3boto3.S3Boto3Storage"
-# STATICFILES_STORAGE="storages.backends.s3boto3.S3Boto3Storage"
 AWS_DEFAULT_ACL=None
 DEFAULT_FILE_STORAGE="playground.storages.MediaStorage"
 STATICFILES_STORAGE="playground.storages.StaticStorage"
@@ -145,5 +148,15 @@ AWS_SQS_ENDPOINT_URL=os.environ.get("AWS_SQS_ENDPOINT_URL", None)
 AWS_SQS_DELETE_QUEUE_NAME=os.environ.get("AWS_SQS_DELETE_QUEUE_NAME", "nstpc-delete")
 AWS_SQS_TRANSFER_QUEUE_NAME=os.environ.get("AWS_SQS_TRANSFER_QUEUE_NAME", "nstpc-transfer")
 
-#
-LOGIN_REDIRECT_URL="image_list"
+
+# settings for using apigateway
+# https://{restapi_id}.execute-api.{region}.amazonaws.com/{stage_name}/{path_name}
+AWS_APIGW_ENDPOINT_URL=os.environ.get("AWS_APIGW_ENDPOINT_URL", None)
+if AWS_APIGW_ENDPOINT_URL is not None and not AWS_APIGW_ENDPOINT_URL.endswith("/"):
+    AWS_APIGW_ENDPOINT_URL += "/"
+AWS_APIGW_RESTAPI_NAME=os.environ.get("AWS_APIGW_RESTAPI_NAME", "nstpc")
+AWS_APIGW_MASKING_PATH="masking"
+
+AWS_APIGW_URL4TEST="{endpoint}restapis/{rest_api_id}/test/_user_request_/{path_name}"
+AWS_APIGW_URL4PROD="https://{rest_api_id}.execute-api.{region}.amazonaws.com/default/{path_name}"
+

@@ -10,6 +10,7 @@
     <th>ContentData</th>
     <th>StyleData</th>
     <th>TransferData</th>
+    <th>Masking</th>
 
     {% for result in result_list %}
         <tr>
@@ -28,6 +29,12 @@
                 <a href="{{ result.transfer.image.url }}">
                     <img src="{{ result.transfer.thumbnail_url }}">
                 </a>
+            </td>
+            <td class="Masking">
+                <form action="{% url 'masking' result_id=result.id %}" method="post" id="masking">
+                    {% csrf_token %}
+                    <input type="image" src="{% static 'playground/icons/masking.png' %}">
+                </form>
             </td>
         </tr>
     {% endfor %}
