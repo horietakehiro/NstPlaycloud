@@ -2,3 +2,4 @@ localstack/data
 database/data
 __pycache__
 .aws-sam
+samconfig.toml

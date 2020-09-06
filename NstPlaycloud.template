@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  This is the template for deploying NstPlaycloud app.
+
+Resources:
+  Vpc:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  PublicSubnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: 
+        Ref: Vpc
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+
+  Igw:
+    Type: 'AWS::EC2::InternetGateway'
+
+  IgwAttachToVpc:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: 
+        Ref: Igw 
+      VpcId:
+        Ref: Vpc
+
+  PublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: 
+        Ref: Vpc 
+
+  PublicRoute:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      GatewayId: 
+        Ref: Igw 
+      RouteTableId:
+        Ref: PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+
+  RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: 
+        Ref: PublicRouteTable
+      SubnetId: 
+        Ref: PublicSubnet
+
+
+  ThumbnailCreationFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: lambda/src/thumbnail-creation/thumbnail_creation/
+      Handler: app.lambda_handler
+      Runtime: python3.6
+      Environment:
+        Variables:
+          S3_ENDPOINT: ""
+      Events:
+        ThumbnailCreation:
+          Type: S3
+          Properties:
+            Bucket: 
+              Ref: SrcBucket # bucket must be created in the same template
+            Events: s3:ObjectCreated:Put
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: '.png'
+
+  SrcBucket:
+    Type: AWS::S3::Bucket
+    BucketName:  nstpc
