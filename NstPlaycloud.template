@@ -3,6 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: |
   This is the template for deploying NstPlaycloud app.
 
+
 Resources:
   Vpc:
     Type: 'AWS::EC2::VPC'
@@ -53,29 +54,53 @@ Resources:
       SubnetId: 
         Ref: PublicSubnet
 
-
   ThumbnailCreationFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/src/thumbnail-creation/thumbnail_creation/
+      CodeUri: lambda/src/thumbnail-creation/.aws-sam/build/ThumbnailCreationFunction/
       Handler: app.lambda_handler
       Runtime: python3.6
-      Environment:
-        Variables:
-          S3_ENDPOINT: ""
+      # Environment:
+      #   Variables:
+      #     # S3_ENDPOINT: 
+      Role:
+        Fn::GetAtt: [LambdaExecRoke, Arn]
       Events:
         ThumbnailCreation:
           Type: S3
           Properties:
-            Bucket: 
-              Ref: SrcBucket # bucket must be created in the same template
+            Bucket:
+              Ref: SrcBucket
             Events: s3:ObjectCreated:Put
             Filter:
               S3Key:
                 Rules:
-                  - Name: suffix
-                    Value: '.png'
+                - Name: suffix
+                  Value: .png
+                - Name: prefix
+                  Value: media/original/
+
+  LambdaExecRoke:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
 
   SrcBucket:
     Type: AWS::S3::Bucket
-    BucketName:  nstpc
+    Properties:
+      BucketName: nstpc
