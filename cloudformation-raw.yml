@@ -62,17 +62,32 @@ Resources:
       SubnetId: 
         Ref: PublicSubnet
 
+  ImageUtilLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: artifacts/image-util-layer/ImageUtilLayer/
+      CompatibleRuntimes:
+        - python3.6
+    Metadata:
+      BuildMethod: python3.6
+
+
   ThumbnailCreationFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/src/thumbnail-creation/.aws-sam/build/ThumbnailCreationFunction/
+      CodeUri: artifacts/thumbnail-creation/ThumbnailCreationFunction/
       Handler: app.lambda_handler
       Runtime: python3.6
+      Timeout: 10
+      Layers:
+        - Ref: ImageUtilLayer
       # Environment:
       #   Variables:
       #     # S3_ENDPOINT: 
+
       Role:
         Fn::GetAtt: [LambdaExecRoke, Arn]
+
       Events:
         ThumbnailCreation:
           Type: S3
@@ -87,6 +102,45 @@ Resources:
                   Value: .png
                 - Name: prefix
                   Value: media/original/
+
+
+  ImageDeletionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: artifacts/image-deletion/ImageDeletionFunction/
+      Handler: app.lambda_handler
+      Runtime: python3.6
+      Timeout: 10
+      Layers:
+        - Ref: ImageUtilLayer
+      Role:
+        Fn::GetAtt: [LambdaExecRoke, Arn]
+      Events:
+        ImageDeletion:
+          Type: SQS
+          Properties:
+            Queue: 
+              Fn::GetAtt: [SrcQueue, Arn]
+            BatchSize: 10
+
+  MaskingCreationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: artifacts/masking-creation/MaskingCreationFunction/
+      Handler: app.lambda_handler
+      Runtime: python3.6
+      Timeout: 10
+      Layers:
+        - Ref: ImageUtilLayer
+      Role:
+        Fn::GetAtt: [LambdaExecRoke, Arn]
+      Events:
+        MaskingCreationApi:
+          Type: Api
+          Properties:
+            Path: /masking
+            Method: post
+
 
   LambdaExecRoke:
     Type: AWS::IAM::Role
@@ -112,3 +166,8 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: nstpc
+
+  SrcQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: nstpc-delete

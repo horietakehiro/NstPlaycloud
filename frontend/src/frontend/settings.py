@@ -133,7 +133,7 @@ LOGIN_REDIRECT_URL="image_list"
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 # settings for AWS
-AWS_REGION="us-east-1"
+AWS_REGION="ap-northeast-1"
 # settings for using s3 bucekt as static and media storage
 AWS_DEFAULT_ACL=None
 DEFAULT_FILE_STORAGE="playground.storages.MediaStorage"

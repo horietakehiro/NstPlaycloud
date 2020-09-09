@@ -16,9 +16,6 @@ Resources:
       CodeUri: image_deletion/
       Handler: app.lambda_handler
       Runtime: python3.6
-      Environment:
-        Variables:
-          S3_ENDPOINT: ""
       Events:
         ImageDeletion:
           Type: SQS
