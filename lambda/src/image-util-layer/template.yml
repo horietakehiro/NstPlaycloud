@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  lambda layer with image utility libraries
+
+
+Resources:
+  ImageUtilLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: image_util_layer
+      CompatibleRuntimes:
+        - python3.6
+    Metadata:
+      BuildMethod: python3.6
