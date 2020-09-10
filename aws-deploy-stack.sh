@@ -37,14 +37,11 @@ aws cloudformation package  --template cloudformation-raw.yml \
                             --s3-bucket ${BUCKET} \
                             --output-template-file cloudformation-packaged.yml
 # use ONEZONE_IA storage class as bucket for artifacts
-aws s3 cp s3://${BUCKET} s3://${BUCKET} --recursi --storage-class ONEZONE_IA
+aws s3 cp s3://${BUCKET} s3://${BUCKET} --recursive --storage-class ONEZONE_IA
 
 
 # deploy main
 echo ">>>>> deploying nstpc-stack"
-# aws cloudformation deploy   --stack-name nstpc-stack \
-#                             --template-file cloudformation-packaged.yml \
-#                             --capabilities CAPABILITY_IAM
 sam deploy  --stack-name nstpc-stack \
             --template-file cloudformation-packaged.yml \
             --capabilities CAPABILITY_IAM
