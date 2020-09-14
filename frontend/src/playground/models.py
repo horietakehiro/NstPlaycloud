@@ -15,7 +15,7 @@ import json
 class Image(models.Model):
     image = models.ImageField(upload_to="original/raw/")
 
-    sqs_client = boto3.client("sqs", endpoint_url=settings.AWS_SQS_ENDPOINT_URL)
+    sqs_client = boto3.client("sqs", endpoint_url=settings.AWS_SQS_ENDPOINT_URL, region_name=settings.AWS_REGION)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -125,7 +125,7 @@ class Result(models.Model):
 
     is_masked = models.BooleanField(default=False)
 
-    sqs_client = boto3.client("sqs", endpoint_url=settings.AWS_SQS_ENDPOINT_URL)
+    sqs_client = boto3.client("sqs", endpoint_url=settings.AWS_SQS_ENDPOINT_URL, region_name=settings.AWS_REGION)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -84,11 +84,11 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'nstpc',
-            'USER': 'nstpc',
-            'PASSWORD': 'nstpc',
-            'HOST': 'database',
-            'PORT': '5432',
+            'HOST': os.environ.get("AWS_AURORA_HOST", "database"),
+            'PORT': os.environ.get("AWS_AURORA_PORT", "5432"),
+            'NAME': os.environ.get("AWS_AURORA_NAME", "nstpc"), # Aurora's default dbname is "postgres"
+            'USER': os.environ.get("AWS_AURORA_USER", "nstpc"),
+            'PASSWORD': os.environ.get("AWS_AURORA_PASSWORD", "nstpc"),
         }
     }
 
@@ -138,6 +138,7 @@ AWS_REGION="ap-northeast-1"
 AWS_DEFAULT_ACL=None
 DEFAULT_FILE_STORAGE="playground.storages.MediaStorage"
 STATICFILES_STORAGE="playground.storages.StaticStorage"
+AWS_S3_REGION_NAME=AWS_REGION
 AWS_STORAGE_BUCKET_NAME=os.environ.get("AWS_STORAGE_BUCKET_NAME", "nstpc")
 AWS_S3_ENDPOINT_URL=os.environ.get("AWS_S3_ENDPOINT_URL", None)
 AWS_S3_SIGNATURE_VERSION="s3v4"
