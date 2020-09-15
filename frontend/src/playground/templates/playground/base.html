@@ -4,33 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NstPlayground</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 </head>
 <body>
-    <h1>NstPlayground</h1>
+    <blockquote class="blockquote text-center">
+        <h1>NstPlayground</h1>
+    </blockquote>
 
     {% if messages %}
     <ul class="messages">
         {% for message in messages %}
-        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% if message.tags == "info" %}
+            <div class="p-3 mb-2 bg-primary text-white">
+                <p>{{ message }}</p>
+            </div>
+            {% elif message.tags == "warning" %}
+            <div class="p-3 mb-2 bg-danger text-white">
+                <p>{{ message }}</p>
+            </div>
+            {% endif %}
         {% endfor %}
     </ul>
     {% endif %}
 
-    <a href="{% url 'logout' %}">Log out</a>
+    <a class="btn btn-secondary" href="{% url 'logout' %}">Log out</a>
     
-    <form action="{% url 'upload' %}" method="POST" id="upload" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ image_form.as_p }}
-        <button type="submit" id="submit">UPLOAD</button>
+    <form action="{% url 'upload' %}" method="POST" id="upload" enctype="multipart/form-data" class="form-inline">
+        <div class="form-group">
+            {% csrf_token %}
+            {{ image_form.as_p }}
+            <div class="input-group">
+                <button type="submit" id="submit" class="btn btn-primary btn-xs">UPLOAD</button>    
+            </div>
+        </div>
     </form>
-    <form action="{% url 'transfer' %}" method="POST" id="transfer">
-        {% csrf_token %}
-        {{ transfer_form.as_p }}
-        <button type="submit" id="transfer_submit">Transfer</button>
+    <form action="{% url 'transfer' %}" method="POST" id="transfer" class="form-inline">
+        <div class="form-group">
+            {% csrf_token %}
+            {{ transfer_form.as_p }}
+            <div class="input-group">
+                <button type="submit" id="transfer_submit" class="btn btn-primary btn-xs">Transfer</button>
+            </div>
+        </div>
     </form>
 
-    
     {% block content %}
     {% endblock content %}
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </body>
 </html>

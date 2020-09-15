@@ -2,11 +2,15 @@
 
 {% block content %}
 {% load static %}
-<h2>ImageList</h2>
-<a href="{% url 'result_list' 0 %}" id="result_list_link">ResultList</a>
+<blockquote class="blockquote text-center">
+    <h2>ImageList</h2>
+</blockquote>
 
+<a class="btn btn-primary" href="{% url 'result_list' 0 %}" id="result_list_link">ResultList</a>
 
-<table>
+<div class="container">
+<div class="table-responsive">
+<table class="table table-striped">
     <th>ImageName</th>
     <th>ImageData</th>
     <th>Delete</th>
@@ -40,6 +44,8 @@
         </tr>
     {% endfor %}
 </table>
+</div>
+</div>
 
 
 {% endblock content %}

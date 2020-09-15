@@ -2,10 +2,16 @@
 
 {% block content %}
 {% load static %}
-<h2>ResultList</h2>
-<a href="{% url 'image_list' %}" id="image_list_link">ImageList</a>
+<blockquote class="blockquote text-center">
+    <h2>ResultList</h2>
+</blockquote>
 
-<table>
+<a class="btn btn-primary" href="{% url 'image_list' %}" id="image_list_link">ImageList</a>
+
+<div class="container">
+    <div class="table-responsive">
+    <table class="table table-striped">
+
     <th>TransferName</th>
     <th>ContentData</th>
     <th>StyleData</th>
@@ -39,6 +45,8 @@
         </tr>
     {% endfor %}
 </table>
+</div>
+</div>
 
 
 {% endblock content %}
