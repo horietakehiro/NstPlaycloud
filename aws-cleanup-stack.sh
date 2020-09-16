@@ -4,6 +4,7 @@
 declare -a BucketList=(
     "nstpc"
     "nstpc-artifacts"
+    "elasticbeanstalk-nstpc-ap-northeast-1"
 )
 
 for bucket in ${BucketList[@]}

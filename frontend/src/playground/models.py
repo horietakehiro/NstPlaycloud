@@ -55,7 +55,7 @@ class Image(models.Model):
     @property
     def thumb_binned_inv_url(self):
         return self.binned_inv_url.replace("/original/", "/thumbnail/")
-    
+
 
     @classmethod
     def send_delete_message(cls, message):

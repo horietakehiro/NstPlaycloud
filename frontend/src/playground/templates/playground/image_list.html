@@ -2,12 +2,10 @@
 
 {% block content %}
 {% load static %}
+<a class="btn btn-primary" href="{% url 'result_list' 0 %}" id="result_list_link">ResultList</a>
 <blockquote class="blockquote text-center">
     <h2>ImageList</h2>
 </blockquote>
-
-<a class="btn btn-primary" href="{% url 'result_list' 0 %}" id="result_list_link">ResultList</a>
-
 <div class="container">
 <div class="table-responsive">
 <table class="table table-striped">

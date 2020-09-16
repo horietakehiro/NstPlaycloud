@@ -66,6 +66,11 @@ services:
       - AWS_SQS_ENDPOINT_URL=http://localstack:4566/
       - AWS_S3_ENDPOINT_URL=http://localstack:4566/
       - AWS_APIGW_ENDPOINT_URL=http://localstack:4566/
+      - AWS_AURORA_HOST=
+      - AWS_AURORA_PORT=
+      - AWS_AURORA_NAME=
+      - AWS_AURORA_PASSWORD=
+      - AWS_AURORA_USER=
 
     volumes:
       - ./frontend/src:/app/frontend

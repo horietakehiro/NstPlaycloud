@@ -408,7 +408,7 @@ class ImageListTestCase(BaseTestCase):
         message_list = self.get_element("class_name", "messages", single=False)
         self.assertIn(
             messages.TRANSFER_WARNING.format(settings.AWS_SQS_ENDPOINT_URL, settings.AWS_SQS_TRANSFER_QUEUE_NAME),
-            [m.text.split("\n") for m in message_list][0],
+            [m.text for m in message_list],
         )
 
     def test_image_list_13(self):

@@ -141,6 +141,7 @@ STATICFILES_STORAGE="playground.storages.StaticStorage"
 AWS_S3_REGION_NAME=AWS_REGION
 AWS_STORAGE_BUCKET_NAME=os.environ.get("AWS_STORAGE_BUCKET_NAME", "nstpc")
 AWS_S3_ENDPOINT_URL=os.environ.get("AWS_S3_ENDPOINT_URL", None)
+AWS_QUERYSTRING_AUTH=False
 AWS_S3_SIGNATURE_VERSION="s3v4"
 STATIC_URL=AWS_S3_ENDPOINT_URL
 
@@ -160,4 +161,6 @@ AWS_APIGW_MASKING_PATH="masking"
 
 AWS_APIGW_URL4TEST="{endpoint}restapis/{rest_api_id}/test/_user_request_/{path_name}"
 AWS_APIGW_URL4PROD="https://{rest_api_id}.execute-api.{region}.amazonaws.com/default/{path_name}"
+
+
 

@@ -16,16 +16,16 @@
     </blockquote>
 
     {% if messages %}
-    <ul class="messages">
+    <ul>
         {% for message in messages %}
             {% if message.tags == "info" %}
-            <div class="p-3 mb-2 bg-primary text-white">
-                <p>{{ message }}</p>
-            </div>
-            {% elif message.tags == "warning" %}
-            <div class="p-3 mb-2 bg-danger text-white">
-                <p>{{ message }}</p>
-            </div>
+                <div class="p-3 mb-2 bg-primary text-white">
+                    <p class="messages">{{ message }}</p>
+                </div>
+            {% else %}
+                <div class="p-3 mb-2 bg-danger text-white">
+                    <p class="messages">{{ message }}</p>
+                </div>
             {% endif %}
         {% endfor %}
     </ul>
