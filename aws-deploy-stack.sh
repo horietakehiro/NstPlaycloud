@@ -5,6 +5,10 @@
 if [ ! -f secrets ]
 then
     echo "create the file : 'secrets' for secrets parameters"
+    echo "required parameters are shown below"
+    echo -e "\e[31m"
+    cat secrets.org
+    echo -e "\e[m"
     exit
 fi
 # confirm that secret parameters are valid
@@ -87,4 +91,6 @@ echo ">>>>> deploying nstpc-stack"
 sam deploy  --stack-name nstpc-stack \
             --template-file cloudformation-packaged.yml \
             --capabilities CAPABILITY_IAM \
-            --parameter-overrides RDSUsername=${RDSUsername} RDSUsername=${RDSUsername} WebUsename=${WebUsename} WebPassword=${WebPassword} WebEmail=${WebEmail}
+            --parameter-overrides MyHostedZoneId=${MyHostedZoneId} MyHostZoneName=${MyHostZoneName} ELBHostedZoneId=${ELBHostedZoneId} \
+                                  RDSUsername=${RDSUsername} RDSPassword=${RDSPassword} \
+                                  WebUsename=${WebUsename} WebPassword=${WebPassword} WebEmail=${WebEmail}

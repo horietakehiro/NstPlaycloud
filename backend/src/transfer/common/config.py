@@ -8,7 +8,6 @@ AWS_SQS_TRANSFER_QUEUE_NAME=os.environ.get("AWS_SQS_TRANSFER_QUEUE_NAME", "nstpc
 
 ### preprocess
 IMAGE_DIR=os.path.join(os.path.dirname(__file__), "..", "..", "images")
-
 MAX_IMAGE_SIZE=int(os.environ.get("MAX_IMAGE_SIZE", 512))
 
 ### engine

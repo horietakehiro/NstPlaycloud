@@ -4,27 +4,33 @@ Description: |
   This is the template for deploying NstPlaycloud app.
 
 Parameters:
+  MyHostedZoneId:
+    Description: "My Domain's HostedZoneId"
+    Type: String
+  MyHostZoneName:
+    Description: "My Domain's HostZoneName"
+    Type: String
+  ELBHostedZoneId:
+    Description: "ELB's HostedZoneID at ap-northeast-1"
+    Type: String
+    Default: Z14GRHDCWA56QT
+
   RDSUsername:
-    Description: test
+    Description: "Master username of RDS cluster"
     Type: String
-    Default: nstpcadmin
   RDSPassword:
-    Description: test
+    Description: "Master password of RDS cluster"
     Type: String
-    Default: nstpcpass
 
   WebUsename:
-    Description: test
+    Description: "Username of Web page"
     Type: String
-    Default: nstpc-admin
   WebPassword:
-    Description: test
+    Description: "Password of Web page"
     Type: String
-    Default: nstpc-pass
   WebEmail:
-    Description: test
+    Description: "Email of Web page"
     Type: String
-    Default: nstpc@nstcp.com
 
 
 Resources:
@@ -104,6 +110,42 @@ Resources:
       SubnetId: 
         Ref: PublicSubnet2
 
+  SSLCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName:
+        Fn::Join: 
+          - "."
+          - - nstpc
+            - Ref: MyHostZoneName
+      DomainValidationOptions:
+        - DomainName:
+            Fn::Join: 
+              - "."
+              - - nstpc
+                - Ref: MyHostZoneName
+          HostedZoneId:
+            Ref: MyHostedZoneId
+      ValidationMethod: DNS
+
+
+  DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId:
+        Ref: MyHostedZoneId
+      Name:
+        Fn::Join:
+          - "."
+          - - nstpc
+            - Ref: MyHostZoneName
+      Type: A
+      AliasTarget:
+        DNSName:
+          Fn::GetAtt: [BeanstalkEnvironment, EndpointURL]
+        HostedZoneId:
+          Ref: ELBHostedZoneId
+
 
 ### Database
   RDSCluster: 
@@ -124,7 +166,7 @@ Resources:
   RDSDBClusterParameterGroup: 
     Type: "AWS::RDS::DBClusterParameterGroup"
     Properties: 
-      Description: "test"
+      Description: "params for configure standard aurora-postgresql11"
       Family: aurora-postgresql11
       Parameters: 
         timezone: US/Eastern
@@ -149,13 +191,13 @@ Resources:
   RDSDBParameterGroup: 
     Type: "AWS::RDS::DBParameterGroup"
     Properties: 
-      Description: "test"
+      Description: "params for configure standard aurora-postgresql11"
       Family: aurora-postgresql11
 
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties: 
-      DBSubnetGroupDescription: "test"
+      DBSubnetGroupDescription: "subnets for allowing just private access"
       DBSubnetGroupName: db-subnet-group
       SubnetIds: 
         - Ref: PrivateSubnet1
@@ -179,13 +221,13 @@ Resources:
     Type: AWS::ElasticBeanstalk::Application
     Properties:
       ApplicationName: frontend
-      Description: AWS Elastic Beanstalk Sample Application
+      Description: frontend application
   BeanstalkApplicationVersion:
     Type: AWS::ElasticBeanstalk::ApplicationVersion
     Properties:
       ApplicationName:
         Ref: BeanstalkApplication
-      Description: AWS ElasticBeanstalk Sample Application Version
+      Description: source files for frontend application
       SourceBundle:
         S3Bucket: "elasticbeanstalk-nstpc-ap-northeast-1"
         S3Key: frontend.zip
@@ -194,12 +236,10 @@ Resources:
     Properties:
       ApplicationName:
         Ref: BeanstalkApplication
-      Description: AWS ElasticBeanstalk Sample Configuration Template
+      Description: configuration for frontend application
       SolutionStackName: "64bit Amazon Linux 2018.03 v2.9.14 running Python 3.6"
       OptionSettings:
-        - Namespace: aws:ec2:instances
-          OptionName: InstanceTypes
-          Value: t2.micro
+        # Network
         - Namespace: aws:ec2:vpc
           OptionName: VPCId
           Value:
@@ -211,7 +251,6 @@ Resources:
               - ","
               - - Ref: PublicSubnet1
                 - Ref: PublicSubnet2
-
         - Namespace: aws:ec2:vpc
           OptionName: ELBSubnets
           Value:
@@ -222,12 +261,11 @@ Resources:
         - Namespace: aws:ec2:vpc
           OptionName: AssociatePublicIpAddress
           Value: true
-        - Namespace: aws:elasticbeanstalk:environment
-          OptionName: EnvironmentType
-          Value: LoadBalanced
-        - Namespace: aws:elasticbeanstalk:environment
-          OptionName: LoadBalancerType
-          Value: application
+
+        # EC2
+        - Namespace: aws:ec2:instances
+          OptionName: InstanceTypes
+          Value: t2.micro
         - Namespace: aws:elasticbeanstalk:environment
           OptionName: ServiceRole
           Value:
@@ -237,6 +275,31 @@ Resources:
           Value:
             Fn::GetAtt: [BeanstalkInstanceProfile, Arn]
 
+
+        # Loadbalancer
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: EnvironmentType
+          # Value: SingleInstance
+          Value: LoadBalanced
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: LoadBalancerType
+          Value: application
+        - Namespace: aws:elbv2:loadbalancer
+          OptionName: SecurityGroups
+          Value:
+            Ref: LoadBalancerSecurityGroup
+        - Namespace: aws:elbv2:listener:443
+          OptionName: ListenerEnabled
+          Value: true
+        - Namespace: aws:elbv2:listener:443
+          OptionName: Protocol
+          Value: HTTPS
+        - Namespace: aws:elbv2:listener:443
+          OptionName: SSLCertificateArns
+          Value:
+            Ref: SSLCertificate          
+
+        # Autoscaling
         - Namespace: 'aws:autoscaling:asg'
           OptionName: MinSize
           Value: 1
@@ -244,6 +307,7 @@ Resources:
           OptionName: MaxSize
           Value: 2
 
+        # Environment Variables
         - Namespace: 'aws:elasticbeanstalk:application:environment'
           OptionName: AWS_AURORA_HOST
           Value:
@@ -327,14 +391,33 @@ Resources:
     DependsOn: 
       - RDSCluster
       - RDSDBInstance
+      - AppBucket
+
     Properties:
       ApplicationName:
         Ref: BeanstalkApplication
-      Description: AWS ElasticBeanstalk Sample Environment
+      Description: environment for frontend application
       TemplateName:
         Ref: BeanstalkConfigurationTemplate
       VersionLabel:
         Ref: BeanstalkApplicationVersion
+
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: LoadBalancerSecurityGroup
+      GroupDescription: LoadBalancerSecurityGroup
+      VpcId:
+        Ref: Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
 
 ### Lambda
   ImageUtilLayer:
@@ -462,3 +545,10 @@ Resources:
       QueueName: nstpc-transfer
 
 ### Backend
+
+
+Outputs:
+  EndpointURL:
+    Description: "endpoint url"
+    Value:
+      Fn::Sub: "https://${DNSRecord}/"
