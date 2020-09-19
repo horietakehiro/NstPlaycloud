@@ -552,3 +552,79 @@ Outputs:
     Description: "endpoint url"
     Value:
       Fn::Sub: "https://${DNSRecord}/"
+
+
+
+
+
+# Parameters:
+#   InstanceType:
+#     Description: test
+#     Type: String
+#     Default: g4dn.xlarge
+
+#   ImageId:
+#     Description: test
+#     Type: String
+#     Default: ami-0b2e21daa689180a9
+
+#   myEC2Instance:
+#     Type: AWS::EC2::Instance
+#     Properties:
+#       KeyName: test-ec2
+#       DisableApiTermination: false
+#       ImageId:
+#         Ref: ImageId
+#       InstanceType:
+#         Ref: InstanceType
+#       SecurityGroupIds:
+#         - 
+#       UserData: 
+#         Fn::Base64: |
+#           #!/bin/bash -ex
+#           docker pull horietakehiro/nstpc-backend-gpu:latest
+#           docker run -d --runtime nvidia --restart always -e MAX_IMAGE_SIZE=1024 --name backend horietakehiro/nstpc-backend-gpu:latest
+#       SubnetId: 
+#       IamInstanceProfile:
+#         Ref: BackendInstanceProfile
+#       LaunchTemplate:
+#         LaunchTemplateId:
+#           Ref: BackendlaunchTemplate
+#         Version:
+#           Fn::GetAtt: [BackendlaunchTemplate, LatestVersionNumber]
+  
+#   BackendlaunchTemplate:
+#     Type: AWS::EC2::LaunchTemplate
+#     Properties:
+#       LaunchTemplateName: BackendSpotLaunchTemplate
+#       LaunchTemplateData:
+#         InstanceMarketOptions:
+#           MarketType: spot
+#           SpotOptions:
+#             MaxPrice: 0.5
+#             SpotInstanceType: one-time
+
+
+#   BackendInstanceProfile:
+#     Type: AWS::IAM::InstanceProfile
+#     Properties:
+#       Path: /
+#       Roles:
+#         - Ref: BackendEC2Role
+#   BackendEC2Role:
+#     Type: AWS::IAM::Role
+#     Properties:
+#       AssumeRolePolicyDocument:
+#         Version: '2012-10-17'
+#         Statement:
+#         - Effect: Allow
+#           Principal:
+#             Service:
+#             - ec2.amazonaws.com
+#           Action:
+#           - sts:AssumeRole
+#       Path: /
+#       ManagedPolicyArns:
+#         - arn:aws:iam::aws:policy/CloudWatchFullAccess
+#         - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+#         - arn:aws:iam::aws:policy/AmazonS3FullAccess

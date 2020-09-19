@@ -18,3 +18,7 @@ aws cloudformation delete-stack --stack-name nstpc-stack
 echo ">>>>> wait until the deletion gets completed."
 aws cloudformation wait stack-delete-complete --stack-name nstpc-stack
 echo "<<<<< stack deletion has completed"
+
+SIR=`aws ec2 describe-spot-instance-requests | jq .SpotInstanceRequests[].SpotInstanceRequestId`
+echo ">>>>> cancel spot isntance request(s) : ${SIR}"
+aws ec2 cancel-spot-instance-requests --spot-instance-request-ids ${SIR}
