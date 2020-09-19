@@ -13,7 +13,7 @@ def receive_sqs_message(config):
     receive a message from sqs queue
     each body in messages are dict and return them as list.
     """
-    clinet = boto3.client("sqs", endpoint_url=config.AWS_SQS_ENDPOINT_URL)
+    clinet = boto3.client("sqs", endpoint_url=config.AWS_SQS_ENDPOINT_URL, region_name=config.AWS_REGION)
     try:
         # get queue url
         url = clinet.get_queue_url(QueueName=config.AWS_SQS_TRANSFER_QUEUE_NAME)
@@ -39,7 +39,7 @@ def get_images_from_s3(config, message):
     and save them on local file,
     and return these, and transfer's path as list
     """
-    client = boto3.client("s3", endpoint_url=message["request_body"]["s3_endpoint"])
+    client = boto3.client("s3", endpoint_url=message["request_body"]["s3_endpoint"], region_name=config.AWS_REGION)
 
     path_list = []
     content_list = message["request_body"]["content_list"]
@@ -153,7 +153,7 @@ def put_image_to_s3(config, message, transfer_path):
     key = message["request_body"]["key_prefix"] + os.path.basename(transfer_path)
     bucket = message["request_body"]["bucket"]
 
-    client = boto3.client("s3", endpoint_url=message["request_body"]["s3_endpoint"])
+    client = boto3.client("s3", endpoint_url=message["request_body"]["s3_endpoint"], region_name=config.AWS_REGION)
     try:
         client.upload_file(Filename=transfer_path, Bucket=bucket, Key=key)
     except:

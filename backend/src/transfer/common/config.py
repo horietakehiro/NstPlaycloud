@@ -1,6 +1,7 @@
 import os
 
 ### AWS
+AWS_REGION=os.environ.get("AWS_REGION", "ap-northeast-1")
 AWS_S3_ENDPOINT_URL=os.environ.get("AWS_S3_ENDPOINT_URL", None)
 AWS_S3_BUCKET_NAME=os.environ.get("AWS_S3_BUCKET_NAME", "nstpc")
 AWS_SQS_ENDPOINT_URL=os.environ.get("AWS_SQS_ENDPOINT_URL", None)
