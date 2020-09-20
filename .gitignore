@@ -6,3 +6,4 @@ samconfig.toml
 artifacts/
 cloudformation-packaged.yml
 secrets
+backups

@@ -156,11 +156,8 @@ AWS_SQS_TRANSFER_QUEUE_NAME=os.environ.get("AWS_SQS_TRANSFER_QUEUE_NAME", "nstpc
 AWS_APIGW_ENDPOINT_URL=os.environ.get("AWS_APIGW_ENDPOINT_URL", None)
 if AWS_APIGW_ENDPOINT_URL is not None and not AWS_APIGW_ENDPOINT_URL.endswith("/"):
     AWS_APIGW_ENDPOINT_URL += "/"
-AWS_APIGW_RESTAPI_NAME=os.environ.get("AWS_APIGW_RESTAPI_NAME", "nstpc")
+AWS_APIGW_RESTAPI_NAME=os.environ.get("AWS_APIGW_RESTAPI_NAME", "nstpc-stack")
 AWS_APIGW_MASKING_PATH="masking"
 
 AWS_APIGW_URL4TEST="{endpoint}restapis/{rest_api_id}/test/_user_request_/{path_name}"
-AWS_APIGW_URL4PROD="https://{rest_api_id}.execute-api.{region}.amazonaws.com/default/{path_name}"
-
-
-
+AWS_APIGW_URL4PROD="https://{rest_api_id}.execute-api.{region}.amazonaws.com/Prod/{path_name}"

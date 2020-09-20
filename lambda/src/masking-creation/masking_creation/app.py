@@ -126,10 +126,10 @@ def mask_image(content, transfer, image_dir):
     masking_path = os.path.join(image_dir, content.split("/")[-1])
     transfer_path = os.path.join(image_dir, transfer.split("/")[-1])
 
-    masked_path = os.path.join(image_dir, "masked_" + transfer.split("/")[-1])
-    masked_inv_path = os.path.join(image_dir, "masked_inv_" + transfer.split("/")[-1])
-    binned_path = os.path.join(image_dir, "binned_" + transfer.split("/")[-1])
-    binned_inv_path = os.path.join(image_dir, "binned_inv_" + transfer.split("/")[-1])
+    masked_path = os.path.join(image_dir, "masked____" + transfer.split("/")[-1])
+    masked_inv_path = os.path.join(image_dir, "masked_inv____" + transfer.split("/")[-1])
+    binned_path = os.path.join(image_dir, "binned____" + transfer.split("/")[-1])
+    binned_inv_path = os.path.join(image_dir, "binned_inv____" + transfer.split("/")[-1])
 
 
     masking = Image.open(masking_path).convert("RGB")
@@ -170,11 +170,11 @@ def upload_files(client, bucket, transfer, image_dir):
     upload 4images created from transfer image.
     """
 
-    files = glob(os.path.join(image_dir, "*_" + transfer.split("/")[-1]))
+    files = glob(os.path.join(image_dir, "*____" + transfer.split("/")[-1]))
 
     for file in files:
         try:
-            prefix = "_".join(file.split("/")[-1].split("_")[:-1])
+            prefix = "_".join(file.split("/")[-1].split("____")[:-1])
             client.upload_file(file, bucket, transfer.replace("/raw/", f"/{prefix}/"))
         except botocore.exceptions.EndpointConnectionError:
             return {"statusCode" : 404, "body" : f"cannot connect to {str(client._endpoint)}"}

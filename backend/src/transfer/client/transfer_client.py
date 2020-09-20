@@ -91,9 +91,10 @@ def preprocess_image(config, image_path):
 
     # limit the image size to config.IMAGE_MAX_SIZE
     current_size = image.size
-    scale = config.MAX_IMAGE_SIZE / max(current_size)
-    new_size = (round(s * scale) for s in current_size)
-    image = image.resize(new_size)
+    if config.MAX_IMAGE_SIZE < max(current_size):
+        scale = config.MAX_IMAGE_SIZE / max(current_size)
+        new_size = (round(s * scale) for s in current_size)
+        image = image.resize(new_size)
 
     # convert dtype
     image = np.array(image, dtype=np.float32)

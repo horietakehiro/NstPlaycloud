@@ -32,6 +32,20 @@ Parameters:
     Description: "Email of Web page"
     Type: String
 
+  InstanceType:
+    Description: "instacen type of backend ec2 server(gpu-available-machine)"
+    Type: String
+    Default: g4dn.xlarge
+
+  ImageId:
+    Description: "instacen type of backend ec2 server(gpu-available-machine)"
+    Type: String
+    Default: ami-0b2e21daa689180a9
+
+  EC2Key:
+    Description: "key pair for ssh"
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: GeneralKey
 
 Resources:
 ### Networks
@@ -274,6 +288,10 @@ Resources:
           OptionName: IamInstanceProfile
           Value:
             Fn::GetAtt: [BeanstalkInstanceProfile, Arn]
+        - Namespace: 'aws:autoscaling:launchconfiguration'
+          OptionName: EC2KeyName
+          Value:
+            Ref: EC2Key
 
 
         # Loadbalancer
@@ -382,6 +400,7 @@ Resources:
         - arn:aws:iam::aws:policy/CloudWatchFullAccess
         - arn:aws:iam::aws:policy/AmazonSQSFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
         - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
         - arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker
         - arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier
@@ -450,10 +469,9 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                - Name: suffix
-                  Value: .png
-                - Name: prefix
-                  Value: media/original/
+                  - Name: prefix
+                    Value: media/original/
+
   ImageDeletionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -545,6 +563,81 @@ Resources:
       QueueName: nstpc-transfer
 
 ### Backend
+  BackendEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId:
+          Ref: BackendlaunchTemplate
+        Version:
+          Fn::GetAtt: [BackendlaunchTemplate, LatestVersionNumber]
+      SubnetId:
+        Ref: PublicSubnet1
+  
+  BackendlaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: BackendSpotLaunchTemplate
+      LaunchTemplateData:
+        DisableApiTermination: false
+        IamInstanceProfile:
+          Arn:
+            Fn::GetAtt: [BackendInstanceProfile, Arn]
+        ImageId:
+          Ref: ImageId
+        InstanceMarketOptions:
+          MarketType: spot
+          SpotOptions:
+            MaxPrice: 0.4
+            SpotInstanceType: one-time
+        InstanceType:
+          Ref: InstanceType
+        KeyName:
+          Ref: EC2Key
+        SecurityGroupIds:
+          - Ref: BackendEC2SG
+        UserData:
+          Fn::Base64: |
+            #!/bin/bash -ex
+            docker pull horietakehiro/nstpc-backend-gpu:latest
+            docker run -d --runtime nvidia --restart always -e MAX_IMAGE_SIZE=1024 --name backend horietakehiro/nstpc-backend-gpu:latest
+
+  BackendEC2SG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: BackendEC2SG
+      GroupDescription: SG for backend ec2 instance
+      VpcId:
+        Ref: Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  BackendInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - Ref: BackendEC2Role
+  BackendEC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
 
 
 Outputs:
@@ -552,79 +645,3 @@ Outputs:
     Description: "endpoint url"
     Value:
       Fn::Sub: "https://${DNSRecord}/"
-
-
-
-
-
-# Parameters:
-#   InstanceType:
-#     Description: test
-#     Type: String
-#     Default: g4dn.xlarge
-
-#   ImageId:
-#     Description: test
-#     Type: String
-#     Default: ami-0b2e21daa689180a9
-
-#   myEC2Instance:
-#     Type: AWS::EC2::Instance
-#     Properties:
-#       KeyName: test-ec2
-#       DisableApiTermination: false
-#       ImageId:
-#         Ref: ImageId
-#       InstanceType:
-#         Ref: InstanceType
-#       SecurityGroupIds:
-#         - 
-#       UserData: 
-#         Fn::Base64: |
-#           #!/bin/bash -ex
-#           docker pull horietakehiro/nstpc-backend-gpu:latest
-#           docker run -d --runtime nvidia --restart always -e MAX_IMAGE_SIZE=1024 --name backend horietakehiro/nstpc-backend-gpu:latest
-#       SubnetId: 
-#       IamInstanceProfile:
-#         Ref: BackendInstanceProfile
-#       LaunchTemplate:
-#         LaunchTemplateId:
-#           Ref: BackendlaunchTemplate
-#         Version:
-#           Fn::GetAtt: [BackendlaunchTemplate, LatestVersionNumber]
-  
-#   BackendlaunchTemplate:
-#     Type: AWS::EC2::LaunchTemplate
-#     Properties:
-#       LaunchTemplateName: BackendSpotLaunchTemplate
-#       LaunchTemplateData:
-#         InstanceMarketOptions:
-#           MarketType: spot
-#           SpotOptions:
-#             MaxPrice: 0.5
-#             SpotInstanceType: one-time
-
-
-#   BackendInstanceProfile:
-#     Type: AWS::IAM::InstanceProfile
-#     Properties:
-#       Path: /
-#       Roles:
-#         - Ref: BackendEC2Role
-#   BackendEC2Role:
-#     Type: AWS::IAM::Role
-#     Properties:
-#       AssumeRolePolicyDocument:
-#         Version: '2012-10-17'
-#         Statement:
-#         - Effect: Allow
-#           Principal:
-#             Service:
-#             - ec2.amazonaws.com
-#           Action:
-#           - sts:AssumeRole
-#       Path: /
-#       ManagedPolicyArns:
-#         - arn:aws:iam::aws:policy/CloudWatchFullAccess
-#         - arn:aws:iam::aws:policy/AmazonSQSFullAccess
-#         - arn:aws:iam::aws:policy/AmazonS3FullAccess
