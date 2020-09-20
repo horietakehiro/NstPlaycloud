@@ -496,7 +496,8 @@ Resources:
       CodeUri: artifacts/masking-creation/MaskingCreationFunction/
       Handler: app.lambda_handler
       Runtime: python3.6
-      Timeout: 10
+      Timeout: 60
+      MemorySize: 1024
       Layers:
         - Ref: ImageUtilLayer
       Role:
