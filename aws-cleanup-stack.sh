@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # buckups images in bucket
-mkdir -p ./backups/original
-aws s3 cp s3://nstpc/media/original ./backups/original/ --recursive
+DIRNAME=`date "+%Y%m%d-%H%M%S"`
+mkdir -p ./backups/${DIRNAME}/original
+aws s3 cp s3://nstpc/media/original ./backups/${DIRNAME}/original --recursive
 
 # cleanup s3 buckets
 declare -a BucketList=(

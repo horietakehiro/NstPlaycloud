@@ -175,7 +175,17 @@ def upload_files(client, bucket, transfer, image_dir):
     for file in files:
         try:
             prefix = "_".join(file.split("/")[-1].split("____")[:-1])
-            client.upload_file(file, bucket, transfer.replace("/raw/", f"/{prefix}/"))
+            # specify the content type
+            if transfer.split(".")[-1] == "png":
+                content_type = "image/png"
+            else:
+                content_type = "image/jpeg"
+            
+            client.upload_file(
+                Filename=file,
+                Bucket=bucket, Key=transfer.replace("/raw/", f"/{prefix}/"),
+                ExtraArgs={"ContentType" : content_type},
+            )
         except botocore.exceptions.EndpointConnectionError:
             return {"statusCode" : 404, "body" : f"cannot connect to {str(client._endpoint)}"}
 

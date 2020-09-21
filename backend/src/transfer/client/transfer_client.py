@@ -151,12 +151,21 @@ def put_image_to_s3(config, message, transfer_path):
     upload transfer image to s3
     """
     # create transfer key name
-    key = message["request_body"]["key_prefix"] + os.path.basename(transfer_path)
+    key = message["request_body"]["key_prefix"] + os.path.basename(transfer_path)    
     bucket = message["request_body"]["bucket"]
+    # specify the content-type
+    if key.split(".")[-1] == "png":
+        content_type = "image/png"
+    else:
+        content_type = "image/jpeg"
 
     client = boto3.client("s3", endpoint_url=message["request_body"]["s3_endpoint"], region_name=config.AWS_REGION)
     try:
-        client.upload_file(Filename=transfer_path, Bucket=bucket, Key=key)
+        client.upload_file(
+            Filename=transfer_path, 
+            Bucket=bucket, Key=key, 
+            ExtraArgs={"ContentType" : content_type},
+        )
     except:
         raise exceptions.S3UploadError(
             os.path.basename(transfer_path), message["request_body"]["s3_endpoint"], bucket
