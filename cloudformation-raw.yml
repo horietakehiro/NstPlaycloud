@@ -558,10 +558,14 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: nstpc-delete
+      VisibilityTimeout: 43200
+      MessageRetentionPeriod: 43200
   TransferQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: nstpc-transfer
+      VisibilityTimeout: 43200
+      MessageRetentionPeriod: 43200
 
 ### Backend
   BackendEC2Instance:
