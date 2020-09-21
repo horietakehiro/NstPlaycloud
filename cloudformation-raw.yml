@@ -605,7 +605,7 @@ Resources:
           Fn::Base64: |
             #!/bin/bash -ex
             docker pull horietakehiro/nstpc-backend-gpu:latest
-            docker run -d --runtime nvidia --restart always -e MAX_IMAGE_SIZE=1024 --name backend horietakehiro/nstpc-backend-gpu:latest
+            docker run -d --runtime nvidia --restart always -e MAX_IMAGE_SIZE=1024 -e EPOCH=1000 --name backend horietakehiro/nstpc-backend-gpu:latest
 
   BackendEC2SG:
     Type: AWS::EC2::SecurityGroup
