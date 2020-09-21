@@ -43,7 +43,7 @@ def create_thumbnail(objkey, image_dir):
 
     try:
         image = Image.open(path)
-        image = image.resize((224, 224))
+        image = image.resize((112, 112))
         image.save(path)
     except:
         return {"message" : 500, "message" : f"{path} is invalid image"}

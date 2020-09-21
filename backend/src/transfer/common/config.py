@@ -12,7 +12,7 @@ IMAGE_DIR=os.path.join(os.path.dirname(__file__), "..", "..", "images")
 MAX_IMAGE_SIZE=int(os.environ.get("MAX_IMAGE_SIZE", 512))
 
 ### engine
-EPOCH=1000
+EPOCH=500
 CONTENT_LAYERS=['block5_conv2']
 STYLE_LAYERS=['block1_conv1', 'block2_conv1', 'block3_conv1', 'block4_conv1', 'block5_conv1']
 
