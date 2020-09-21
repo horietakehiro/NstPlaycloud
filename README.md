@@ -1,5 +1,5 @@
 # NstPlaycloud
-NstPlaycloud provides you a playground on your web browser, where you can try [Neural Style Transfer](https://www.tensorflow.org/tutorials/generative/style_transfer) with any images you like. This app is designed to be deployed on AWS, so it's named play**cloud**, instead of play**ground**.
+NstPlaycloud provides you a playground on your web browser, where you can try [Neural Style Transfer](https://www.tensorflow.org/tutorials/generative/style_transfer) with any images you like. This app is designed to be deployed on AWS, so it's named as  play**cloud**, instead of play**ground**.
 
 ## Prerequirement(AWS)
 - Route53 Domain
