@@ -125,7 +125,7 @@ class BaseTestCase(StaticLiveServerTestCase):
         )
         res = cls.aws_lambda_client.get_function(FunctionName=cls.lambda_ok)
         lambda_arn = res["Configuration"]["FunctionArn"]
-        uri = f"arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/{lambda_arn}/invocations"
+        uri = f"arn:aws:apigateway:{settings.AWS_REGION}:lambda:path/2015-03-31/functions/{lambda_arn}/invocations"
         res = cls.aws_apigw_client.put_integration(
             restApiId=cls.rest_api_id, 
             resourceId=cls.resource_id, 
