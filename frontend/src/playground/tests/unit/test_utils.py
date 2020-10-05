@@ -37,7 +37,7 @@ class UtilsTestCase(BaseTestCase):
 
         boto_mock.client.return_value = client_mock
 
-        prod_url = "https://{rest_api_id}.execute-api.{region}.amazonaws.com/default/{path_name}".format(
+        prod_url = "https://{rest_api_id}.execute-api.{region}.amazonaws.com/Prod/{path_name}".format(
             rest_api_id=self.rest_api_id,
             region=settings.AWS_REGION,
             path_name="masking"
