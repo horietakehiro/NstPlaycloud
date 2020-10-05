@@ -7,10 +7,6 @@
         "Key": {
           "FilterRules": [
             {
-              "Name": "suffix",
-              "Value": ".png"
-            },
-            {
                 "Name": "prefix",
                 "Value": "media/original/"
             }

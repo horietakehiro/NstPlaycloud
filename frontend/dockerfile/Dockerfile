@@ -20,5 +20,6 @@ RUN pip install --no-cache-dir -r /config/requirements.txt
 
 RUN chmod +x /config/entrypoint.sh
 
+COPY ./config/aws /root/.aws
 WORKDIR /app/frontend
 ENTRYPOINT ["/config/entrypoint.sh"]
