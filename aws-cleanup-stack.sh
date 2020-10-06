@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# buckups images in bucket
+# buckups images stored on s3 bucket.
 DIRNAME=`date "+%Y%m%d-%H%M%S"`
 mkdir -p ./backups/${DIRNAME}/original
 aws s3 cp s3://nstpc/media/original ./backups/${DIRNAME}/original --recursive

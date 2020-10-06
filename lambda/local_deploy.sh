@@ -9,10 +9,7 @@ then
 fi
 ENDPOINT=$1
 
-# create s3 buckets for artifacts
-# BUCKET=nstpc-artifacts
-# aws s3 mb s3://${BUCKET} --endpoint-url ${ENDPOINT}
-# create lambda
+# create lambda packages
 declare -a LambdaList=(
     # "image-util-layer"
     "thumbnail-creation"
@@ -31,24 +28,19 @@ do
     fi
     # replace requirements files,
     # because lambda layer is not available in standard Localstack
-    # mv ./src/${lambda}/${lambda//-/_}/requirements.txt \
-    #     ./src/${lambda}/${lambda//-/_}/requirements4aws.txt
     cp ./src/${lambda}/${lambda//-/_}/requirements4localstack.txt \
         ./src/${lambda}/${lambda//-/_}/requirements.txt
     sam build   --use-container \
                 --template ./src/${lambda}/template.yml \
                 --build-dir ./artifacts/${lambda} \
                 --debug
-
     # restore requirements file
     cp ./src/${lambda}/${lambda//-/_}/requirements4aws.txt \
         ./src/${lambda}/${lambda//-/_}/requirements.txt
 
-    # make zip file and create lambda function
+    # create zip file and create lambda function
     cd `ls -d ./artifacts/${lambda}/*/` && \
         zip -r ${lambda}.zip . && \
-        # aws s3 cp ${lambda}.zip s3://${BUCKET}/${lambda}.zip --endpoint-url ${ENDPOINT} && \
-        AWS_PAGER="" \
         aws lambda create-function \
             --function-name ${lambda} \
             --runtime python3.6 \
@@ -58,9 +50,8 @@ do
             --region ap-northeast-1 \
             --environment Variables={S3_ENDPOINT=http://Localstack:4566/} \
             --endpoint-url ${ENDPOINT}
-        
         rm -f ${lambda}.zip && \
-    cd ../../../
+        cd ../../../
     sleep 1
 done
 
@@ -71,6 +62,7 @@ aws s3api put-bucket-notification-configuration \
     --bucket ${BUCKET} \
     --notification-configuration file://config/s3-notification-configuration.json \
     --endpoint-url ${ENDPOINT}
+# make the bucket public-accessible
 aws s3api put-bucket-policy \
     --bucket ${BUCKET} \
     --policy file://config/s3-public-access-policy.json \
@@ -93,6 +85,7 @@ aws sqs create-queue \
     --queue-name ${QUEUE} \
     --attributes MessageRetentionPeriod=43200,VisibilityTimeout=43200 \
     --endpoint-url ${ENDPOINT}
+# configure event mapping with delete-queue and image-deletion function
 aws lambda create-event-source-mapping \
     --function-name image-deletion \
     --batch-size 10 \
@@ -100,8 +93,8 @@ aws lambda create-event-source-mapping \
     --endpoint-url ${ENDPOINT}
 
 
-# # create apigateway resource
-# cleanup all rest-apis
+# # create apigateway resource and map with the masking-creation function
+# in advance, cleanup all rest-apis
 REST_API_IDs=`aws apigateway get-rest-apis \
                 --region ap-northeast-1 \
                 --endpoint-url ${ENDPOINT} | jq -r .items[].id`
@@ -113,6 +106,7 @@ do
         --rest-api-id ${rest_api_id} \
         --endpoint-url ${ENDPOINT}
 done
+
 echo ">>>>> create rest-api"
 REST_API_ID=`aws apigateway create-rest-api \
                 --name  nstpc-stack \
@@ -131,7 +125,6 @@ RESOURCE_ID=`aws apigateway create-resource \
                 --path-part masking \
                 --endpoint-url ${ENDPOINT} | jq -r .id`
 echo "<<<<< resource-id : ${RESOURCE_ID}"
-
 echo ">>>>> create method on rest-api"
 aws apigateway put-method \
     --rest-api-id ${REST_API_ID} \
@@ -156,9 +149,3 @@ aws apigateway create-deployment \
     --rest-api-id ${REST_API_ID} \
     --stage-name test \
     --endpoint-url ${ENDPOINT}
-
-
-aws s3api put-public-access-block \
-    --bucket my-bucket \
-    --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false" \
-    --endpoint-url http://localhost:4566/

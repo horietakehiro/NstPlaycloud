@@ -3,7 +3,7 @@ database/data
 __pycache__
 .aws-sam
 samconfig.toml
-artifacts/
+artifacts
 cloudformation-packaged.yml
 secrets
 backups

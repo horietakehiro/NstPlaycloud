@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# check if secret parameters are set
+# check whether secret parameters are set on the file : "secrets"
 if [ ! -f secrets ]
 then
     echo "create the file : 'secrets' for secrets parameters"
@@ -11,7 +11,7 @@ then
     echo -e "\e[m"
     exit
 fi
-# confirm that secret parameters are valid
+# confirm that secret parameters are as a user desired.
 echo -e "\e[31m===== show secret parameters start ====="
 cat secrets
 echo "===== show secret parameters end   ====="
@@ -55,8 +55,7 @@ do
     sleep 1
 done
 
-# packagin artifacts
-# check if the bucket for artifact already exists. If not exists, create in advance
+# packaging artifacts
 BUCKET=nstpc-artifacts
 echo ">>>>> cleanup bucket for artifact : ${BUCKET}"
 aws s3 rb s3://${BUCKET} --force &> /dev/null
@@ -66,7 +65,7 @@ echo ">>>>> uploading artifacts to bucket : ${BUCKET}"
 aws cloudformation package  --template cloudformation-raw.yml \
                             --s3-bucket ${BUCKET} \
                             --output-template-file cloudformation-packaged.yml
-# use ONEZONE_IA storage class as bucket for artifacts
+# use ONEZONE_IA storage class
 aws s3 cp s3://${BUCKET} s3://${BUCKET} --recursive --storage-class ONEZONE_IA
 
 
