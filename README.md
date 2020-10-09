@@ -1,5 +1,5 @@
 # NstPlaycloud
-NstPlaycloud provides you a playground on your web browser, where you can try [Neural Style Transfer](https://www.tensorflow.org/tutorials/generative/style_transfer) with any images you like. NstPlaycloud is designed to be deployed on AWS.
+NstPlaycloud provides you a playground on your web browser, where you can try [Neural Style Transfer](https://www.tensorflow.org/tutorials/generative/style_transfer) with any images you like. NstPlaycloud can be deployed either as docker-compose stack(local dev environment), or as AWS CloudFormation stack(product environment).
 
 ## Prerequirement(AWS Resources)
 - Route53 Domain
@@ -23,7 +23,7 @@ NstPlaycloud provides you a playground on your web browser, where you can try [N
 ## Deployment on AWS
 1. Clone this repository
 2. Run the deployment script : `./aws-deploy-stack.sh`
-3. After Deployment has completed, you can access the web page : https://nstpc.YOUR_OWN_DOMAIN.com/
+3. After Deployment has completed, you can access the web page : https://nstpc.YOUR_OWN_DOMAIN/
 
 ## Cleanup on AWS
 1. Clone this repository
